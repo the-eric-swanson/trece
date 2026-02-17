@@ -87,11 +87,11 @@
     <script>
         let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false, deferredPrompt;
 
-        // PWA Install Logic
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            document.getElementById('install-button').style.display = 'block';
+            const installBtn = document.getElementById('install-button');
+            if (installBtn) installBtn.style.display = 'block';
         });
 
         async function installPWA() {
@@ -107,10 +107,23 @@
             document.getElementById('end-modal').style.display = 'none';
             document.getElementById('rules-modal').style.display = 'none';
             document.getElementById('review-notice').style.display = 'none';
-            const suits = ['♠', '♥', '♦', '♣'], names = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-            for (let s of suits) for (let i = 0; i < names.length; i++) deck.push({ n: names[i], v: i + 1, s: s });
             
-            // Vegas-Grade Shuffle
+            // Fixed Suits with HTML Entities for cross-device reliability
+            const suits = [
+                { s: '&spades;', c: '#1a1a1a' },
+                { s: '&hearts;', c: '#b71c1c' },
+                { s: '&diams;', c: '#b71c1c' },
+                { s: '&clubs;', c: '#1a1a1a' }
+            ];
+            const names = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+            
+            for (let suitObj of suits) {
+                for (let i = 0; i < names.length; i++) {
+                    deck.push({ n: names[i], v: i + 1, s: suitObj.s, color: suitObj.c });
+                }
+            }
+
+            // Triple-Pass Crypto Shuffle
             for (let pass = 0; pass < 3; pass++) {
                 for (let i = deck.length - 1; i > 0; i--) {
                     let j;
@@ -136,18 +149,27 @@
             div.className = 'card' + (isFacedown ? ' facedown' : '');
             div.dataset.v = data.v;
             div.style.top = topPos + "px";
+            div.style.color = data.color;
             div.innerHTML = `<div style="margin-bottom:-10px">${data.n}</div><div style="font-size:2.5rem">${data.s}</div>`;
-            if (data.s === '♥' || data.s === '♦') div.style.color = '#b71c1c';
+            
             div.onclick = function(e) {
                 e.stopPropagation();
                 if (roundEnded || div.classList.contains('facedown') || div.parentElement.id === 'success-slot') return;
                 if (div.nextElementSibling) return;
+                
                 const val = parseInt(div.dataset.v);
-                if (val === 13) { if (navigator.vibrate) navigator.vibrate([40, 40]); moveToSuccess(div); return; }
-                if (!selectedCard) { selectedCard = div; div.classList.add('selected'); } 
-                else {
-                    if (selectedCard === div) { div.classList.remove('selected'); selectedCard = null; } 
-                    else if (parseInt(selectedCard.dataset.v) + val === 13) {
+                if (val === 13) { 
+                    if (navigator.vibrate) navigator.vibrate([40, 40]);
+                    moveToSuccess(div); 
+                    return; 
+                }
+
+                if (!selectedCard) { 
+                    selectedCard = div; div.classList.add('selected'); 
+                } else {
+                    if (selectedCard === div) { 
+                        div.classList.remove('selected'); selectedCard = null; 
+                    } else if (parseInt(selectedCard.dataset.v) + val === 13) {
                         if (navigator.vibrate) navigator.vibrate([40, 40]);
                         moveToSuccess(selectedCard); moveToSuccess(div); selectedCard = null;
                     } else {
@@ -223,6 +245,7 @@
             } else {
                 sessionScore -= tableauCount;
                 document.getElementById('end-title').innerText = "No More Moves";
+                document.getElementById('end-title').style.color = "#f44336";
                 document.getElementById('end-message').innerText = "Tableau cards left: " + tableauCount + " (Penalty: -" + tableauCount + ")";
             }
             document.getElementById('score-val').innerText = sessionScore;
@@ -233,15 +256,14 @@
         function reopenEndModal() { document.getElementById('end-modal').style.display = 'flex'; document.getElementById('review-notice').style.display = 'none'; }
         function showRules() { document.getElementById('rules-modal').style.display = 'flex'; }
         function closeRules() { document.getElementById('rules-modal').style.display = 'none'; }
+        
         window.onload = initGame;
 
         if ('serviceWorker' in navigator) {
-          window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-              .then(reg => console.log('Service Worker Registered'))
-              .catch(err => console.log('Service Worker Failed', err));
-          });
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed', err));
+            });
         }
-      </script>
+    </script>
 </body>
 </html>
