@@ -46,25 +46,19 @@
         <h1 style="font-weight: 200; letter-spacing: 5px;">TRECE</h1>
         <div>Score: <span id="score-val">0</span></div>
     </div>
-
+    
     <div id="top-bar">
-        <div class="slot-group">
-            <div>Deck (<span id="deck-n">0</span>)</div>
-            <div class="deck-back" onclick="drawCard()">DRAW</div>
-        </div>
-        
-        <div style="display: flex; gap: 20px;"> <div class="slot-group">
-                <div>Active</div>
-                <div class="slot" id="active-slot"></div>
+        <div style="display: flex; gap: 12px;"> <div class="slot-group">
+                <div class="deck-back" onclick="drawCard()">
+                    <span id="deck-n" style="font-size: 1.2rem; font-weight: bold;">52</span>
+                </div>
             </div>
             <div class="slot-group">
-                <div>Discard</div>
                 <div class="slot" id="discard-slot"></div>
             </div>
         </div>
     
         <div class="slot-group">
-            <div>Success</div>
             <div class="slot" id="success-slot"></div>
         </div>
     </div>
@@ -181,30 +175,44 @@
         }
 
         function drawCard() {
-            if (deck.length === 0 || roundEnded) { checkGameState(); return; }
-            const active = document.getElementById('active-slot'), discard = document.getElementById('discard-slot');
-            if (active.children.length > 0) {
-                const old = active.children[0];
-                old.style.top = (discard.children.length * 1) + "px";
-                discard.appendChild(old);
+            if (deck.length === 0 || roundEnded) { 
+                checkGameState(); 
+                return; 
             }
-            renderCard(deck.pop(), 'active-slot', 0, false);
+            
+            const discard = document.getElementById('discard-slot');
+            
+            // Create the new card from the deck
+            // We render it directly into the discard slot
+            renderCard(deck.pop(), 'discard-slot', discard.children.length * 1, false);
+            
             updateUI();
             checkGameState();
         }
 
         function moveToSuccess(el) {
-            const parentColumn = el.parentElement;
+            const parent = el.parentElement;
             el.classList.remove('selected');
             const succ = document.getElementById('success-slot');
+            
+            // Stack cards slightly in success pile
             el.style.top = (succ.children.length * 1) + "px";
             succ.appendChild(el);
-            if (parentColumn.classList.contains('column') && parentColumn.children.length > 0) {
-                const newBottom = parentColumn.lastElementChild;
-                if (newBottom.classList.contains('facedown')) newBottom.classList.remove('facedown');
+            
+            // 1. If it came from a Tableau Column, flip the card underneath
+            if (parent.classList.contains('column') && parent.children.length > 0) {
+                const newBottom = parent.lastElementChild;
+                if (newBottom.classList.contains('facedown')) {
+                    newBottom.classList.remove('facedown');
+                }
             }
-            setTimeout(checkGameState, 300);
-        }
+    
+    // 2. Note: If it came from Discard, the card beneath it 
+    // is automatically revealed and playable because of our 
+    // click logic (only lastElementChild is clickable).
+
+         setTimeout(checkGameState, 300);
+    }
 
         function updateUI() { document.getElementById('deck-n').innerText = deck.length; }
 
