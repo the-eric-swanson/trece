@@ -24,7 +24,6 @@
         .card.facedown * { visibility: hidden; }
         .card.selected { transform: translateY(-8px); outline: 4px solid #5c5c5c; z-index: 100 !important; }
 
-        /* Error Shake Animation */
         .card.error { outline: 4px solid #b71c1c; background-color: #ffdce0; animation: shake 0.4s; z-index: 101 !important; }
         @keyframes shake {
             0%, 100% { transform: translateX(0) translateY(-8px); }
@@ -41,6 +40,7 @@
         button:hover { border-color: white; color: white; }
         .btn-primary { background: white; color: black; border: none; margin-top: 20px; }
     </style>
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div id="header">
@@ -124,19 +124,42 @@
             div.style.top = topPos + "px";
             div.innerHTML = '<div style="margin-bottom:-10px">' + data.n + '</div><div style="font-size:2.5rem">' + data.s + '</div>';
             if (data.s === '♥' || data.s === '♦') div.style.color = '#b71c1c';
+            
             div.onclick = function() {
                 if (roundEnded || div.classList.contains('facedown') || div.nextElementSibling || div.parentElement.id === 'success-slot') return;
+                
                 const val = parseInt(div.dataset.v);
-                if (val === 13) { moveToSuccess(div); return; }
-                if (!selectedCard) { selectedCard = div; div.classList.add('selected'); }
+                
+                if (val === 13) { 
+                    if (navigator.vibrate) navigator.vibrate([40, 40]); // Subtle success tap
+                    moveToSuccess(div); 
+                    return; 
+                }
+                
+                if (!selectedCard) { 
+                    selectedCard = div; 
+                    div.classList.add('selected'); 
+                } 
                 else {
-                    if (selectedCard === div) { div.classList.remove('selected'); selectedCard = null; }
+                    if (selectedCard === div) { 
+                        div.classList.remove('selected'); 
+                        selectedCard = null; 
+                    }
                     else if (parseInt(selectedCard.dataset.v) + val === 13) {
-                        moveToSuccess(selectedCard); moveToSuccess(div); selectedCard = null;
-                    } else {
+                        if (navigator.vibrate) navigator.vibrate([40, 40]); // Subtle success tap
+                        moveToSuccess(selectedCard); 
+                        moveToSuccess(div); 
+                        selectedCard = null;
+                    } 
+                    else {
                         const c1 = selectedCard, c2 = div;
-                        c1.classList.add('error'); c2.classList.add('error');
-                        setTimeout(() => { c1.classList.remove('error', 'selected'); c2.classList.remove('error'); }, 400);
+                        if (navigator.vibrate) navigator.vibrate(200); // Error thump
+                        c1.classList.add('error'); 
+                        c2.classList.add('error');
+                        setTimeout(() => { 
+                            c1.classList.remove('error', 'selected'); 
+                            c2.classList.remove('error'); 
+                        }, 400);
                         selectedCard = null;
                     }
                 }
