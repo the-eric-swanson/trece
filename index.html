@@ -8,8 +8,7 @@
         body { font-family: sans-serif; background-color: var(--bg); color: var(--accent); display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; overflow-x: hidden; }
         #header { width: 100%; max-width: 800px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
         #score-val { font-size: 2.2rem; color: white; transition: all 0.3s; display: block; }
-        
-        #top-bar { display: flex; gap: 20px; width: 100%; max-width: 800px; margin-bottom: 40px; }
+        #top-bar { display: flex; justify-content: space-between; width: 702px; max-width: 95vw; margin-bottom: 40px;}
         .slot-group { display: flex; flex-direction: column; align-items: center; }
         .push-right { margin-right: auto; }
         .slot { width: 90px; height: 128px; border-radius: 4px; background: var(--panel); border: 1px solid rgba(255,255,255,0.08); position: relative; }
@@ -49,11 +48,25 @@
     </div>
 
     <div id="top-bar">
-        <div class="slot-group"><div>Deck (<span id="deck-n">0</span>)</div><div class="deck-back" onclick="drawCard()">DRAW</div></div>
-        <div class="slot-group"><div>Active</div><div class="slot" id="active-slot"></div></div>
-        <div class="slot-group"><div>Discard</div><div class="slot" id="discard-slot"></div></div>
-        <div class="slot-group push-right"></div>
-        <div class="slot-group"><div>Success</div><div class="slot" id="success-slot"></div></div>
+        <div class="slot-group">
+            <div>Deck (<span id="deck-n">0</span>)</div>
+            <div class="deck-back" onclick="drawCard()">DRAW</div>
+        </div>
+        
+        <div style="display: flex; gap: 20px;"> <div class="slot-group">
+                <div>Active</div>
+                <div class="slot" id="active-slot"></div>
+            </div>
+            <div class="slot-group">
+                <div>Discard</div>
+                <div class="slot" id="discard-slot"></div>
+            </div>
+        </div>
+    
+        <div class="slot-group">
+            <div>Success</div>
+            <div class="slot" id="success-slot"></div>
+        </div>
     </div>
 
     <div id="game-container">
