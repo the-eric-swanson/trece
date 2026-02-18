@@ -4,270 +4,290 @@
     <meta charset="UTF-8">
     <title>Trece</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <style>
         :root { --bg: #2c2c2c; --panel: rgba(255,255,255,0.05); --card-bg: #ffffff; --accent: #d4d4d4; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--accent); display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; overflow-x: hidden; touch-action: manipulation; }
-        #header { width: 702px; max-width: 95vw; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
-        #score-val { font-size: 2.2rem; color: white; }
-        #top-bar { display: flex; width: 702px; max-width: 95vw; height: 128px; margin-bottom: 40px; position: relative; }
-        .deck-stack { width: 90px; height: 128px; background: #3d3d3d; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; position: absolute; left: 0; z-index: 5; }
-        .slot { width: 90px; height: 128px; border-radius: 4px; background: var(--panel); border: 1px solid rgba(255,255,255,0.08); position: absolute; }
-        #active-slot { left: 102px; }
-        #discard-slot { left: 306px; }
-        #success-slot { left: 612px; }
-        #game-board { display: flex; gap: 12px; }
-        .column { width: 90px; min-height: 450px; position: relative; }
-        .card { width: 88px; height: 126px; background: var(--card-bg); color: #1a1a1a; border-radius: 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 800; font-size: 2.2rem; cursor: pointer; position: absolute; box-shadow: 0 1px 3px rgba(0,0,0,0.2); user-select: none; transition: all 0.2s ease-out; }
-        .card.facedown { background: #3d3d3d !important; border: 1px solid rgba(255,255,255,0.1); color: transparent !important; cursor: default; }
+        
+        html, body { 
+            height: 100%; margin: 0; padding: 0; overflow: hidden; 
+            background-color: var(--bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body { display: flex; align-items: center; justify-content: center; }
+
+        /* Stable container with fixed aspect ratio targets */
+        #scaler {
+            display: flex; flex-direction: column; align-items: center;
+            transform-origin: center center;
+            padding: 15px;
+            width: 720px; 
+        }
+
+        #header { 
+            width: 100%; display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; 
+        }
+
+        #top-bar { display: flex; width: 100%; height: 115px; margin-bottom: 20px; position: relative; }
+
+        .deck-stack, .slot { width: 84px; height: 115px; border-radius: 6px; position: absolute; }
+        .deck-stack { 
+            background: #3d3d3d; border: 1px solid rgba(255,255,255,0.1); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; 
+            justify-content: center; cursor: pointer; font-weight: bold; left: 0; 
+        }
+        .slot { background: var(--panel); border: 1px solid rgba(255,255,255,0.08); }
+        #active-slot { left: 100px; }
+        #discard-slot { left: 290px; }
+        #success-slot { left: 620px; }
+
+        #game-board { display: flex; gap: 10px; align-items: flex-start; width: 100%; justify-content: center; }
+        .column { width: 84px; height: 320px; position: relative; }
+
+        .card { 
+            width: 82px; height: 113px; 
+            background: var(--card-bg); color: #1a1a1a; 
+            border-radius: 5px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; 
+            font-weight: 800; font-size: 1.8rem; 
+            cursor: pointer; position: absolute; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+            user-select: none; transition: transform 0.2s, top 0.2s; 
+        }
+
+        .card.facedown { background: #3d3d3d !important; color: transparent !important; }
         .card.facedown * { visibility: hidden; }
-        .card.selected { transform: translateY(-15px) !important; outline: 4px solid #ffd700; z-index: 100 !important; }
-        .card.error { outline: 4px solid #b71c1c; background-color: #ffdce0; animation: shake 0.4s; z-index: 101 !important; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
-        .modal-box { background: #383838; padding: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 350px; }
-        button { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--accent); padding: 12px 24px; cursor: pointer; text-transform: uppercase; font-weight: bold; margin-top: 10px; }
-        .btn-primary { background: white; color: black; border: none; margin-top: 20px; width: 100%; }
-        .btn-install { background: #ffd700; color: black; border: none; margin-top: 10px; width: 100%; display: none; }
-        #review-notice { position: fixed; bottom: 20px; right: 20px; background: #b71c1c; color: white; padding: 15px 25px; border-radius: 4px; display: none; cursor: pointer; z-index: 2100; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .card.selected { transform: translateY(-12px) !important; outline: 3px solid #ffd700; z-index: 100 !important; }
+        .card.error { outline: 3px solid #b71c1c; animation: shake 0.4s; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(5px); }
+        .modal-box { background: #383838; padding: 25px; border-radius: 12px; text-align: center; width: 300px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        button { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: var(--accent); padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-weight: bold; margin-top: 10px; border-radius: 6px; }
+        .btn-primary { background: white; color: black; border: none; width: 100%; margin-top: 15px; }
+        #review-notice { position: fixed; bottom: 20px; right: 20px; background: #b71c1c; color: white; padding: 12px 24px; border-radius: 6px; display: none; cursor: pointer; z-index: 2100; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
+
+<div id="scaler">
     <div id="header">
-        <h1 style="font-weight: 200; letter-spacing: 5px; margin: 0;">TRECE</h1>
-        <div>Score: <span id="score-val">0</span></div>
+        <h1 style="font-weight: 200; letter-spacing: 5px; margin: 0; font-size: 1.3rem;">TRECE</h1>
+        <div style="font-size: 1.2rem;">Score: <span id="score-val" style="font-weight:bold; color:white;">0</span></div>
     </div>
+
     <div id="top-bar">
         <div class="deck-stack" id="deck-slot" onclick="drawCard()">0</div>
         <div class="slot" id="active-slot"></div>
         <div class="slot" id="discard-slot"></div>
         <div class="slot" id="success-slot"></div>
     </div>
-    <div id="game-container">
-        <div id="game-board">
-            <div class="column" id="col-0"></div><div class="column" id="col-1"></div>
-            <div class="column" id="col-2"></div><div class="column" id="col-3"></div>
-            <div class="column" id="col-4"></div><div class="column" id="col-5"></div>
-            <div class="column" id="col-6"></div>
-        </div>
+
+    <div id="game-board">
+        <div class="column" id="col-0"></div><div class="column" id="col-1"></div>
+        <div class="column" id="col-2"></div><div class="column" id="col-3"></div>
+        <div class="column" id="col-4"></div><div class="column" id="col-5"></div>
+        <div class="column" id="col-6"></div>
     </div>
 
-    <div class="modal-overlay" id="end-modal">
-        <div class="modal-box">
-            <h2 id="end-title" style="margin-top:0;"></h2>
-            <p id="end-message"></p>
-            <button class="btn-primary" onclick="initGame()">Play Again</button>
-            <button onclick="viewBoard()">View Board</button>
-            <button id="install-button" class="btn-install" onclick="installPWA()">Install Trece App</button>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="rules-modal" onclick="closeRules()">
-        <div class="modal-box" onclick="event.stopPropagation()">
-            <h2 style="margin-top:0;">Rules</h2>
-            <div style="text-align:left; font-size:0.9rem; line-height:1.5;">
-                <ul>
-                    <li>Pair cards totaling 13. Kings clear solo.</li>
-                    <li>Click Deck to flip a card to Active.</li>
-                    <li>Drawing moves Active to Discard.</li>
-                    <li>Only the top card of any pile is playable.</li>
-                </ul>
-            </div>
-            <button class="btn-primary" onclick="closeRules()">Close</button>
-        </div>
-    </div>
-
-    <div id="review-notice" onclick="reopenEndModal()">Return to Menu</div>
-
-    <div style="margin-top:40px; display:flex; gap:15px;">
+    <div style="margin-top:20px; display:flex; gap:15px;">
         <button onclick="showRules()">Rules</button>
         <button onclick="initGame()">Restart</button>
     </div>
+</div>
 
-    <script>
-        let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false, deferredPrompt;
+<div class="modal-overlay" id="end-modal">
+    <div class="modal-box">
+        <h2 id="end-title" style="margin-top:0;"></h2>
+        <p id="end-message"></p>
+        <button class="btn-primary" onclick="initGame()">Play Again</button>
+        <button onclick="viewBoard()" style="border:none; opacity:0.6;">Inspect Board</button>
+    </div>
+</div>
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            const installBtn = document.getElementById('install-button');
-            if (installBtn) installBtn.style.display = 'block';
-        });
+<div class="modal-overlay" id="rules-modal" onclick="closeRules()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <h3>Rules</h3>
+        <p style="text-align:left; font-size:0.9rem; line-height:1.5; opacity:0.9;">Pair cards totaling 13. Kings (13) clear solo. Draw moves Active to Discard. Only top cards playable. Clear columns to win.</p>
+        <button class="btn-primary" onclick="closeRules()">Close</button>
+    </div>
+</div>
 
-        async function installPWA() {
-            if (!deferredPrompt) return;
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') deferredPrompt = null;
-            document.getElementById('install-button').style.display = 'none';
-        }
+<div id="review-notice" onclick="reopenEndModal()">Return to Menu</div>
 
-        function initGame() {
-            deck = []; selectedCard = null; roundEnded = false;
-            document.getElementById('end-modal').style.display = 'none';
-            document.getElementById('rules-modal').style.display = 'none';
-            document.getElementById('review-notice').style.display = 'none';
-            
-            // Unicode Hex Codes for consistent iPad/iPhone rendering
-            const suits = [
-                { s: '\u2660', c: '#1a1a1a' }, // Spades
-                { s: '\u2665', c: '#b71c1c' }, // Hearts
-                { s: '\u2666', c: '#b71c1c' }, // Diamonds
-                { s: '\u2663', c: '#1a1a1a' }  // Clubs
-            ];
-            const names = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-            
-            for (let suitObj of suits) {
-                for (let i = 0; i < names.length; i++) {
-                    deck.push({ n: names[i], v: i + 1, s: suitObj.s, color: suitObj.c });
-                }
-            }
+<script>
+    let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false;
 
-            // Triple-Pass Vegas Shuffle
-            for (let pass = 0; pass < 3; pass++) {
-                for (let i = deck.length - 1; i > 0; i--) {
-                    let j;
-                    const range = i + 1, maxUint32 = 4294967295, limit = maxUint32 - (maxUint32 % range);
-                    let randomVal;
-                    do { const array = new Uint32Array(1); window.crypto.getRandomValues(array); randomVal = array[0]; } while (randomVal >= limit);
-                    j = randomVal % range;
-                    [deck[i], deck[j]] = [deck[j], deck[i]];
-                }
-            }
-            clearUI();
-            for (let i = 0; i < 7; i++) for (let j = 0; j <= i; j++) renderCard(deck.pop(), 'col-' + i, j * 28, (j < i));
-            updateUI();
-        }
+    // --- STABLE SCALING LOGIC ---
+    function resizeGame() {
+        const scaler = document.getElementById('scaler');
+        const availW = window.innerWidth * 0.96;
+        const availH = window.innerHeight * 0.92;
+        const baseW = 720;
+        const baseH = 550; // Optimized base height
 
-        function clearUI() {
-            for (let i = 0; i < 7; i++) document.getElementById('col-' + i).innerHTML = '';
-            ['active-slot', 'discard-slot', 'success-slot'].forEach(id => document.getElementById(id).innerHTML = '');
-        }
+        const scaleW = availW / baseW;
+        const scaleH = availH / baseH;
+        const finalScale = Math.min(scaleW, scaleH, 1);
 
-        function renderCard(data, containerId, topPos, isFacedown = false) {
-            const div = document.createElement('div');
-            div.className = 'card' + (isFacedown ? ' facedown' : '');
-            div.dataset.v = data.v;
-            div.style.top = topPos + "px";
-            div.style.color = data.color;
-            div.innerHTML = `<div style="margin-bottom:-10px">${data.n}</div><div style="font-size:2.5rem">${data.s}</div>`;
-            
-            div.onclick = function(e) {
-                e.stopPropagation();
-                if (roundEnded || div.classList.contains('facedown') || div.parentElement.id === 'success-slot') return;
-                if (div.nextElementSibling) return;
-                
-                const val = parseInt(div.dataset.v);
-                if (val === 13) { 
-                    if (navigator.vibrate) navigator.vibrate([40, 40]);
-                    moveToSuccess(div); 
-                    return; 
-                }
+        scaler.style.transform = `scale(${finalScale})`;
+    }
+    window.addEventListener('resize', resizeGame);
 
-                if (!selectedCard) { 
-                    selectedCard = div; div.classList.add('selected'); 
-                } else {
-                    if (selectedCard === div) { 
-                        div.classList.remove('selected'); selectedCard = null; 
-                    } else if (parseInt(selectedCard.dataset.v) + val === 13) {
-                        if (navigator.vibrate) navigator.vibrate([40, 40]);
-                        moveToSuccess(selectedCard); moveToSuccess(div); selectedCard = null;
-                    } else {
-                        if (navigator.vibrate) navigator.vibrate(200);
-                        const c1 = selectedCard, c2 = div;
-                        c1.classList.add('error'); c2.classList.add('error');
-                        setTimeout(() => { c1.classList.remove('error', 'selected'); c2.classList.remove('error'); }, 400);
-                        selectedCard = null;
-                    }
-                }
-            };
-            document.getElementById(containerId).appendChild(div);
-            return div;
-        }
-
-        function drawCard() {
-            if (deck.length === 0 || roundEnded) return;
-            const active = document.getElementById('active-slot'), discard = document.getElementById('discard-slot');
-            if (active.children.length > 0) {
-                const old = active.children[0];
-                if (selectedCard === old) { old.classList.remove('selected'); selectedCard = null; }
-                old.style.top = "0px";
-                discard.appendChild(old);
-            }
-            renderCard(deck.pop(), 'active-slot', 0, false);
-            updateUI();
-            checkGameState();
-        }
-
-        function moveToSuccess(el) {
-            const parent = el.parentElement;
-            el.classList.remove('selected');
-            const succ = document.getElementById('success-slot');
-            el.style.top = "0px";
-            succ.appendChild(el);
-            if (parent.classList.contains('column') && parent.children.length > 0) {
-                const next = parent.lastElementChild;
-                if (next.classList.contains('facedown')) {
-                    next.classList.remove('facedown');
-                    // iPad Rendering Fix: Force a layout reflow
-                    void next.offsetWidth;
-                }
-            }
-            setTimeout(checkGameState, 300);
-        }
-
-        function updateUI() { 
-            const box = document.getElementById('deck-slot');
-            box.innerText = deck.length;
-            box.style.opacity = deck.length === 0 ? "0.2" : "1";
-        }
-
-        function checkGameState() {
-            if (roundEnded) return;
-            const tableauCount = document.querySelectorAll('.column .card').length;
-            if (tableauCount === 0) { setTimeout(() => showEndModal(true), 800); return; }
-            if (deck.length === 0) {
-                const playable = Array.from(document.querySelectorAll('.card')).filter(c => !c.classList.contains('facedown') && !c.nextElementSibling && c.parentElement.id !== 'success-slot');
-                let movePossible = false;
-                for (let i = 0; i < playable.length; i++) {
-                    const v1 = parseInt(playable[i].dataset.v);
-                    if (v1 === 13) movePossible = true;
-                    for (let j = i + 1; j < playable.length; j++) if (v1 + parseInt(playable[j].dataset.v) === 13) movePossible = true;
-                }
-                if (!movePossible) setTimeout(() => showEndModal(false), 1500);
-            }
-        }
-
-        function showEndModal(isWin) {
-            roundEnded = true;
-            const modal = document.getElementById('end-modal'), tableauCount = document.querySelectorAll('.column .card').length;
-            if (isWin) {
-                let bonus = 5 + deck.length; sessionScore += bonus;
-                document.getElementById('end-title').innerText = "Victory!";
-                document.getElementById('end-title').style.color = "#4caf50";
-                document.getElementById('end-message').innerText = "Tableau cleared! Points: +" + bonus;
-            } else {
-                sessionScore -= tableauCount;
-                document.getElementById('end-title').innerText = "No More Moves";
-                document.getElementById('end-title').style.color = "#f44336";
-                document.getElementById('end-message').innerText = "Tableau cards left: " + tableauCount + " (Penalty: -" + tableauCount + ")";
-            }
-            document.getElementById('score-val').innerText = sessionScore;
-            modal.style.display = 'flex';
-        }
-
-        function viewBoard() { document.getElementById('end-modal').style.display = 'none'; document.getElementById('review-notice').style.display = 'block'; }
-        function reopenEndModal() { document.getElementById('end-modal').style.display = 'flex'; document.getElementById('review-notice').style.display = 'none'; }
-        function showRules() { document.getElementById('rules-modal').style.display = 'flex'; }
-        function closeRules() { document.getElementById('rules-modal').style.display = 'none'; }
+    function initGame() {
+        deck = []; selectedCard = null; roundEnded = false;
+        document.getElementById('end-modal').style.display = 'none';
+        document.getElementById('review-notice').style.display = 'none';
         
-        window.onload = initGame;
+        const suits = [{s:'\u2660',c:'#1a1a1a'},{s:'\u2665',c:'#b71c1c'},{s:'\u2666',c:'#b71c1c'},{s:'\u2663',c:'#1a1a1a'}];
+        const names = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        for (let suit of suits) for (let i = 0; i < names.length; i++) 
+            deck.push({ n: names[i], v: i + 1, s: suit.s, color: suit.c });
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed', err));
-            });
+        for (let p = 0; p < 3; p++) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const range = i + 1;
+                const a = new Uint32Array(1); window.crypto.getRandomValues(a);
+                const j = a[0] % range;
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
         }
-    </script>
+        clearUI();
+        for (let i = 0; i < 7; i++) {
+            for (let j = 0; j <= i; j++) renderCard(deck.pop(), 'col-' + i, j, (j < i));
+        }
+        repositionAllCards();
+        updateUI();
+        resizeGame();
+    }
+
+    // Stable Vertical Offset: Fixed at 14px to prevent jumping
+    function repositionAllCards() {
+        for (let i = 0; i < 7; i++) {
+            const cards = document.getElementById('col-' + i).children;
+            const offset = 14; 
+            for (let j = 0; j < cards.length; j++) {
+                cards[j].style.top = (j * offset) + "px";
+                cards[j].style.zIndex = j;
+            }
+        }
+    }
+
+    function renderCard(data, containerId, index, isFacedown = false) {
+        const div = document.createElement('div');
+        div.className = 'card' + (isFacedown ? ' facedown' : '');
+        div.dataset.v = data.v;
+        div.style.color = data.color;
+        div.innerHTML = `<div style="margin-bottom:-10px; font-size:1.7rem;">${data.n}</div><div style="font-size:2.1rem;">${data.s}</div>`;
+        
+        div.onclick = function(e) {
+            e.stopPropagation();
+            if (roundEnded || div.classList.contains('facedown') || div.parentElement.id === 'success-slot') return;
+            if (div.nextElementSibling) return;
+            const val = parseInt(div.dataset.v);
+            if (val === 13) { if (navigator.vibrate) navigator.vibrate(40); moveToSuccess(div); return; }
+            if (!selectedCard) { selectedCard = div; div.classList.add('selected'); } 
+            else {
+                if (selectedCard === div) { div.classList.remove('selected'); selectedCard = null; } 
+                else if (parseInt(selectedCard.dataset.v) + val === 13) {
+                    if (navigator.vibrate) navigator.vibrate(40);
+                    moveToSuccess(selectedCard); moveToSuccess(div); selectedCard = null;
+                } else {
+                    if (navigator.vibrate) navigator.vibrate(200);
+                    const c1 = selectedCard, c2 = div;
+                    c1.classList.add('error'); c2.classList.add('error');
+                    setTimeout(() => { c1.classList.remove('error', 'selected'); c2.classList.remove('error'); }, 400);
+                    selectedCard = null;
+                }
+            }
+        };
+        document.getElementById(containerId).appendChild(div);
+        return div;
+    }
+
+    function clearUI() {
+        for (let i = 0; i < 7; i++) document.getElementById('col-' + i).innerHTML = '';
+        ['active-slot', 'discard-slot', 'success-slot'].forEach(id => document.getElementById(id).innerHTML = '');
+    }
+
+    function drawCard() {
+        if (deck.length === 0 || roundEnded) return;
+        const active = document.getElementById('active-slot'), discard = document.getElementById('discard-slot');
+        if (active.children.length > 0) {
+            const old = active.children[0];
+            if (selectedCard === old) { old.classList.remove('selected'); selectedCard = null; }
+            old.style.top = "0px";
+            discard.appendChild(old);
+        }
+        renderCard(deck.pop(), 'active-slot', 0, false);
+        updateUI();
+        checkGameState();
+    }
+
+    function moveToSuccess(el) {
+        const parent = el.parentElement;
+        el.classList.remove('selected');
+        el.style.top = "0px";
+        document.getElementById('success-slot').appendChild(el);
+        if (parent.classList.contains('column')) {
+            if (parent.children.length > 0) {
+                const next = parent.lastElementChild;
+                if (next.classList.contains('facedown')) { next.classList.remove('facedown'); void next.offsetWidth; }
+            }
+            repositionAllCards();
+        }
+        setTimeout(checkGameState, 300);
+    }
+
+    function updateUI() { 
+        const ds = document.getElementById('deck-slot');
+        ds.innerText = deck.length;
+        ds.style.opacity = deck.length === 0 ? "0.2" : "1";
+    }
+
+    function checkGameState() {
+        if (roundEnded) return;
+        const tc = document.querySelectorAll('.column .card').length;
+        if (tc === 0) { setTimeout(() => showEndModal(true), 800); return; }
+        if (deck.length === 0) {
+            const playable = Array.from(document.querySelectorAll('.card')).filter(c => !c.classList.contains('facedown') && !c.nextElementSibling && c.parentElement.id !== 'success-slot');
+            let move = false;
+            for (let i = 0; i < playable.length; i++) {
+                if (parseInt(playable[i].dataset.v) === 13) move = true;
+                for (let j = i + 1; j < playable.length; j++) if (parseInt(playable[i].dataset.v) + parseInt(playable[j].dataset.v) === 13) move = true;
+            }
+            if (!move) setTimeout(() => showEndModal(false), 1500);
+        }
+    }
+
+    function showEndModal(isWin) {
+        roundEnded = true;
+        const tc = document.querySelectorAll('.column .card').length;
+        const modal = document.getElementById('end-modal');
+        if (isWin) {
+            let b = 5 + deck.length; sessionScore += b;
+            document.getElementById('end-title').innerText = "Victory!";
+            document.getElementById('end-title').style.color = "#4caf50";
+            document.getElementById('end-message').innerText = "Cleared! Points: +" + b;
+        } else {
+            sessionScore -= tc;
+            document.getElementById('end-title').innerText = "Game Over";
+            document.getElementById('end-title').style.color = "#f44336";
+            document.getElementById('end-message').innerText = "Penalty: -" + tc;
+        }
+        document.getElementById('score-val').innerText = sessionScore;
+        modal.style.display = 'flex';
+    }
+
+    function viewBoard() { document.getElementById('end-modal').style.display = 'none'; document.getElementById('review-notice').style.display = 'block'; }
+    function reopenEndModal() { document.getElementById('end-modal').style.display = 'flex'; document.getElementById('review-notice').style.display = 'none'; }
+    function showRules() { document.getElementById('rules-modal').style.display = 'flex'; }
+    function closeRules() { document.getElementById('rules-modal').style.display = 'none'; }
+
+    window.onload = initGame;
+</script>
 </body>
 </html>
