@@ -6,80 +6,115 @@
     <link rel="manifest" href="manifest.json">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <style>
-        :root { --bg: #2c2c2c; --panel: rgba(255,255,255,0.05); --card-bg: #ffffff; --accent: #d4d4d4; }
+        :root { 
+            --felt: radial-gradient(circle at center, #1e4d1a 0%, #0d260b 100%);
+            --gold: #d4af37;
+            --gold-glow: 0 0 15px rgba(212, 175, 55, 0.6);
+            --card-w: 84px;
+            --card-h: 118px;
+            --shadow: 0 6px 15px rgba(0,0,0,0.5);
+        }
         
         html, body { 
-            height: 100%; width: 100%; margin: 0; padding: 0;
-            background-color: var(--bg);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            overflow: hidden; /* Lock scrolling */
+            height: 100dvh; width: 100%; margin: 0; padding: 0; 
+            overflow: hidden; position: fixed; touch-action: none; 
+            background: var(--felt);
+            font-family: "Palatino Linotype", "Palatino", serif; 
             display: flex; align-items: center; justify-content: center;
         }
 
         #scaler {
             display: flex; flex-direction: column; align-items: center;
-            transform-origin: center center;
-            width: 720px; /* Logical base width */
-            will-change: transform;
+            transform-origin: center center; width: 720px;
         }
 
+        #header-container { width: 100%; margin-bottom: 75px; position: relative; }
         #header { 
-            width: 100%; display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; 
+            width: 100%; display: flex; justify-content: space-between; align-items: baseline; 
+            color: var(--gold); padding-bottom: 12px;
+            text-shadow: var(--gold-glow);
+        }
+        .gold-line { width: 100%; height: 2px; background: var(--gold); box-shadow: var(--gold-glow); opacity: 0.5; }
+
+        #top-bar { display: flex; width: 100%; height: 120px; margin-bottom: 30px; position: relative; }
+
+        .deck-label {
+            position: absolute; top: -55px; left: 0; font-size: 0.85rem; 
+            color: var(--gold); letter-spacing: 2px; font-weight: bold;
+            text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
-        #top-bar { display: flex; width: 100%; height: 110px; margin-bottom: 15px; position: relative; }
-
-        .deck-stack, .slot { width: 80px; height: 110px; border-radius: 6px; position: absolute; }
-        .deck-stack { 
-            background: #3d3d3d; border: 1px solid rgba(255,255,255,0.1); 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; 
-            justify-content: center; cursor: pointer; font-weight: bold; left: 0; 
+        .card, .deck-stack, .slot { 
+            width: var(--card-w); height: var(--card-h); 
+            border-radius: 8px; position: absolute; bottom: 0;
+            box-sizing: border-box;
+            overflow: hidden;
+            border: 3px solid #fff;
         }
-        .slot { background: var(--panel); border: 1px solid rgba(255,255,255,0.08); }
-        #active-slot { left: 95px; }
-        #discard-slot { left: 285px; }
-        #success-slot { left: 630px; }
 
-        #game-board { display: flex; gap: 10px; align-items: flex-start; width: 100%; justify-content: center; }
-        .column { width: 80px; height: 300px; position: relative; }
+        /* CLASSIC ORNATE CARD BACK */
+        .deck-stack, .card.facedown { 
+            background-color: #0f1c3a !important;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 1px, transparent 1px),
+                repeating-conic-gradient(#162a55 0% 25%, #0f1c3a 0% 50%) !important;
+            background-size: 8px 8px, 16px 16px !important;
+            box-shadow: var(--shadow);
+            display: flex; align-items: center; justify-content: center;
+            left: 0;
+        }
+        
+        .slot { background: rgba(0,0,0,0.3); border: 1px solid rgba(212,175,55,0.2); }
+        #active-slot { left: 105px; }
+        #discard-slot { left: 300px; }
+        #success-slot { left: 615px; }
+
+        #game-board { display: flex; gap: 12px; align-items: flex-start; width: 100%; justify-content: center; }
+        .column { width: var(--card-w); height: 320px; position: relative; }
 
         .card { 
-            width: 78px; height: 108px; 
-            background: var(--card-bg); color: #1a1a1a; 
-            border-radius: 5px; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; 
-            font-weight: 800; font-size: 1.8rem; 
+            background: #fff; color: #1a1a1a; 
+            display: flex; flex-direction: column; 
+            align-items: center; justify-content: space-around; 
             cursor: pointer; position: absolute; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
-            user-select: none; transition: transform 0.2s, top 0.2s; 
+            box-shadow: var(--shadow); 
+            user-select: none; transition: transform 0.2s, top 0.2s;
+            padding: 8px 0;
         }
 
-        .card.facedown { background: #3d3d3d !important; color: transparent !important; }
+        .card-val { 
+            font-family: "Georgia", serif; 
+            font-size: 2.8rem; font-weight: 700; line-height: 0.8;
+        }
+        .card-suit { font-size: 2.8rem; line-height: 1; }
+
         .card.facedown * { visibility: hidden; }
-        .card.selected { transform: translateY(-10px) !important; outline: 3px solid #ffd700; z-index: 100 !important; }
-        .card.error { outline: 3px solid #b71c1c; animation: shake 0.4s; }
+        .card.selected { transform: translateY(-15px) !important; border-color: var(--gold); z-index: 100 !important; box-shadow: var(--gold-glow); }
+        .card.error { border-color: #b71c1c; animation: shake 0.4s; }
 
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(5px); }
-        .modal-box { background: #383838; padding: 20px; border-radius: 12px; text-align: center; width: 260px; border: 1px solid rgba(255,255,255,0.1); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(8px); }
+        .modal-box { background: #0d260b; padding: 35px; border-radius: 15px; text-align: center; width: 340px; border: 3px solid var(--gold); color: white; box-shadow: var(--gold-glow); }
         
-        button { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: var(--accent); padding: 10px 18px; cursor: pointer; text-transform: uppercase; font-weight: bold; margin-top: 8px; border-radius: 6px; font-size: 0.8rem; }
-        .btn-primary { background: white; color: black; border: none; width: 100%; margin-top: 12px; }
-        #review-notice { position: fixed; bottom: 20px; right: 20px; background: #b71c1c; color: white; padding: 12px 20px; border-radius: 6px; display: none; cursor: pointer; z-index: 2100; font-weight: bold; }
+        button { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 12px 24px; cursor: pointer; text-transform: uppercase; font-weight: bold; margin-top: 15px; border-radius: 6px; letter-spacing: 2px; transition: 0.2s; }
+        .btn-primary { background: var(--gold); color: #0d260b; border: none; width: 100%; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div id="scaler">
-    <div id="header">
-        <h1 style="font-weight: 200; letter-spacing: 5px; margin: 0; font-size: 1.2rem;">TRECE</h1>
-        <div style="font-size: 1.1rem;">Score: <span id="score-val" style="font-weight:bold; color:white;">0</span></div>
+    <div id="header-container">
+        <div id="header">
+            <h1 style="font-weight: 200; letter-spacing: 12px; margin: 0; font-size: 2.2rem;">TRECE</h1>
+            <div style="font-size: 1.5rem;">SCORE: <span id="score-val">0</span></div>
+        </div>
+        <div class="gold-line"></div>
     </div>
 
     <div id="top-bar">
-        <div class="deck-stack" id="deck-slot" onclick="drawCard()">0</div>
+        <div class="deck-label">REMAINING: <span id="deck-count">0</span></div>
+        <div class="deck-stack" id="deck-slot" onclick="drawCard()"></div>
         <div class="slot" id="active-slot"></div>
         <div class="slot" id="discard-slot"></div>
         <div class="slot" id="success-slot"></div>
@@ -92,72 +127,50 @@
         <div class="column" id="col-6"></div>
     </div>
 
-    <div style="margin-top:15px; display:flex; gap:12px;">
-        <button onclick="showRules()">Rules</button>
-        <button onclick="initGame()">Restart</button>
+    <div style="margin-top:40px; display:flex; gap:20px;">
+        <button onclick="showRules()">RULES</button>
+        <button onclick="initGame()">RESTART</button>
     </div>
 </div>
 
 <div class="modal-overlay" id="end-modal">
     <div class="modal-box">
-        <h2 id="end-title" style="margin-top:0; font-size: 1.5rem;"></h2>
-        <p id="end-message" style="font-size: 0.9rem;"></p>
-        <button class="btn-primary" onclick="initGame()">Play Again</button>
-        <button onclick="viewBoard()" style="border:none; opacity:0.6; font-size: 0.7rem;">Inspect</button>
+        <h2 id="end-title" style="margin-top:0; letter-spacing: 4px; color:var(--gold);"></h2>
+        <p id="end-comment" style="font-size: 1.4rem; font-style: italic; margin: 10px 0;"></p>
+        <p id="end-message" style="font-size: 1.1rem; opacity:0.8;"></p>
+        <button class="btn-primary" onclick="initGame()">DEAL AGAIN</button>
+        <button onclick="viewBoard()" style="border:none; opacity:0.6; font-size: 0.7rem;">VIEW THE BOARD</button>
     </div>
 </div>
-
-<div id="review-notice" onclick="reopenEndModal()">Return to Menu</div>
 
 <script>
     let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false;
 
     function resizeGame() {
         const scaler = document.getElementById('scaler');
-        // Visual viewport accounts for keyboard and browser bars better than window.inner
-        const vv = window.visualViewport || { width: window.innerWidth, height: window.innerHeight };
-        
-        const availW = vv.width * 0.96;
-        const availH = vv.height * 0.94;
-        
-        const baseW = 720;
-        const baseH = 500; // Total height of the game elements
-
-        const scaleW = availW / baseW;
-        const scaleH = availH / baseH;
-        
-        // Find the most restrictive dimension
-        const finalScale = Math.min(scaleW, scaleH, 1);
-        scaler.style.transform = `scale(${finalScale})`;
+        const availW = window.innerWidth * 0.96, availH = window.innerHeight * 0.92;
+        const scale = Math.min(availW / 720, availH / 650, 1);
+        scaler.style.transform = `scale(${scale})`;
     }
-
-    // Comprehensive resize triggers
     window.addEventListener('resize', resizeGame);
-    if (window.visualViewport) window.visualViewport.addEventListener('resize', resizeGame);
-    window.addEventListener('orientationchange', () => setTimeout(resizeGame, 300));
 
     function initGame() {
         deck = []; selectedCard = null; roundEnded = false;
         document.getElementById('end-modal').style.display = 'none';
-        document.getElementById('review-notice').style.display = 'none';
-        
         const suits = [{s:'\u2660',c:'#1a1a1a'},{s:'\u2665',c:'#b71c1c'},{s:'\u2666',c:'#b71c1c'},{s:'\u2663',c:'#1a1a1a'}];
         const names = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
         for (let suit of suits) for (let i = 0; i < names.length; i++) 
             deck.push({ n: names[i], v: i + 1, s: suit.s, color: suit.c });
-
+        
         for (let p = 0; p < 3; p++) {
             for (let i = deck.length - 1; i > 0; i--) {
-                const range = i + 1;
                 const a = new Uint32Array(1); window.crypto.getRandomValues(a);
-                const j = a[0] % range;
+                const j = a[0] % (i + 1);
                 [deck[i], deck[j]] = [deck[j], deck[i]];
             }
         }
         clearUI();
-        for (let i = 0; i < 7; i++) {
-            for (let j = 0; j <= i; j++) renderCard(deck.pop(), 'col-' + i, j, (j < i));
-        }
+        for (let i = 0; i < 7; i++) for (let j = 0; j <= i; j++) renderCard(deck.pop(), 'col-' + i, j, (j < i));
         repositionAllCards();
         updateUI();
         resizeGame();
@@ -166,9 +179,8 @@
     function repositionAllCards() {
         for (let i = 0; i < 7; i++) {
             const cards = document.getElementById('col-' + i).children;
-            const offset = 14; 
             for (let j = 0; j < cards.length; j++) {
-                cards[j].style.top = (j * offset) + "px";
+                cards[j].style.top = (j * 15) + "px";
                 cards[j].style.zIndex = j;
             }
         }
@@ -179,7 +191,7 @@
         div.className = 'card' + (isFacedown ? ' facedown' : '');
         div.dataset.v = data.v;
         div.style.color = data.color;
-        div.innerHTML = `<div style="margin-bottom:-6px; font-size:1.6rem;">${data.n}</div><div style="font-size:2rem;">${data.s}</div>`;
+        div.innerHTML = `<div class="card-val">${data.n}</div><div class="card-suit">${data.s}</div>`;
         
         div.onclick = function(e) {
             e.stopPropagation();
@@ -229,7 +241,9 @@
         const parent = el.parentElement;
         el.classList.remove('selected');
         el.style.top = "0px";
-        document.getElementById('success-slot').appendChild(el);
+        const successSlot = document.getElementById('success-slot');
+        el.style.zIndex = successSlot.children.length + 100;
+        successSlot.appendChild(el);
         if (parent.classList.contains('column')) {
             if (parent.children.length > 0) {
                 const next = parent.lastElementChild;
@@ -241,9 +255,8 @@
     }
 
     function updateUI() { 
-        const ds = document.getElementById('deck-slot');
-        ds.innerText = deck.length;
-        ds.style.opacity = deck.length === 0 ? "0.2" : "1";
+        document.getElementById('deck-count').innerText = deck.length;
+        document.getElementById('deck-slot').style.opacity = deck.length === 0 ? "0.2" : "1";
     }
 
     function checkGameState() {
@@ -264,27 +277,31 @@
     function showEndModal(isWin) {
         roundEnded = true;
         const tc = document.querySelectorAll('.column .card').length;
-        const modal = document.getElementById('end-modal');
+        const gameScore = isWin ? (5 + deck.length) : -tc;
+        let comment = "";
         if (isWin) {
-            let b = 5 + deck.length; sessionScore += b;
-            document.getElementById('end-title').innerText = "Victory!";
-            document.getElementById('end-title').style.color = "#4caf50";
-            document.getElementById('end-message').innerText = "Cleared! Points: +" + b;
+            if (gameScore === 5) comment = "Phew! Close one.";
+            else if (gameScore <= 9) comment = "Good job!";
+            else if (gameScore <= 14) comment = "Way to go!";
+            else if (gameScore <= 20) comment = "Wow!";
+            else comment = "Magnificent!";
         } else {
-            sessionScore -= tc;
-            document.getElementById('end-title').innerText = "No Moves";
-            document.getElementById('end-title').style.color = "#f44336";
-            document.getElementById('end-message').innerText = "Penalty: -" + tc;
+            if (gameScore === -1) comment = "So close!";
+            else if (gameScore >= -5) comment = "Nice try!";
+            else if (gameScore >= -9) comment = "Bummer :/";
+            else comment = "Ouch! :(";
         }
+        document.getElementById('end-title').innerText = isWin ? "VICTORY" : "GAME OVER";
+        document.getElementById('end-comment').innerText = comment;
+        document.getElementById('end-message').innerText = `Game Score: ${gameScore}`;
+        sessionScore += gameScore;
         document.getElementById('score-val').innerText = sessionScore;
-        modal.style.display = 'flex';
-        resizeGame(); // Re-trigger resize to ensure modal fits
+        document.getElementById('end-modal').style.display = 'flex';
     }
 
-    function viewBoard() { document.getElementById('end-modal').style.display = 'none'; document.getElementById('review-notice').style.display = 'block'; }
-    function reopenEndModal() { document.getElementById('end-modal').style.display = 'flex'; document.getElementById('review-notice').style.display = 'none'; }
-    function showRules() { alert("Pair cards totaling 13. Kings clear solo. Drawing moves Active to Discard. Clear columns to win!"); }
-    
+    function showRules() { alert("TRECE RULES:\n1. Pair cards totaling 13 (e.g., 9+4, J+2).\n2. Kings (13) are cleared solo.\n3. Clear the Tableau to win.\n4. Drawing moves Active to Discard.\n5. Only top cards are playable."); }
+    function viewBoard() { document.getElementById('end-modal').style.display = 'none'; }
+
     window.onload = initGame;
 </script>
 </body>
