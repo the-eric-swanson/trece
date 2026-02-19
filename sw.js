@@ -1,25 +1,20 @@
-const CACHE_NAME = 'trece-v2';
-const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  // Add links to any custom icons or sounds here
-];
+const CACHE_NAME = 'trece-v3'; // Change this number every time you push big changes
 
-// Install Service Worker
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
-  );
+self.addEventListener('install', (event) => {
+  // Force the waiting service worker to become the active service worker
+  self.skipWaiting();
 });
 
-// Fetch Assets from Cache
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => {
-      return response || fetch(e.request);
+self.addEventListener('activate', (event) => {
+    // Claim any currently open tabs immediately
+    event.waitUntil(clients.claim());
+});
+
+self.addEventListener('fetch', (event) => {
+  // "Network First" strategy: Try the internet first, fall back to cache if offline
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
     })
   );
 });

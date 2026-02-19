@@ -303,6 +303,13 @@
     function viewBoard() { document.getElementById('end-modal').style.display = 'none'; }
 
     window.onload = initGame;
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            // This fires when the new service worker takes over.
+            window.location.reload(); 
+        });
+}
 </script>
 </body>
 </html>
