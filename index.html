@@ -113,7 +113,7 @@
     </div>
 
     <div id="top-bar">
-        <div class="deck-label">REMAINING: <span id="deck-count">0</span></div>
+        <div class="deck-label">CARDS REMAINING: <span id="deck-count">0</span></div>
         <div class="deck-stack" id="deck-slot" onclick="drawCard()"></div>
         <div class="slot" id="active-slot"></div>
         <div class="slot" id="discard-slot"></div>
@@ -129,7 +129,7 @@
 
     <div style="margin-top:40px; display:flex; gap:20px;">
         <button onclick="showRules()">RULES</button>
-        <button onclick="initGame()">RESTART</button>
+        <button onclick="initGame()">DEAL AGAIN</button>
     </div>
 </div>
 
@@ -147,12 +147,31 @@
     let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false;
 
     function resizeGame() {
-        const scaler = document.getElementById('scaler');
-        const availW = window.innerWidth * 0.96, availH = window.innerHeight * 0.92;
-        const scale = Math.min(availW / 720, availH / 650, 1);
-        scaler.style.transform = `scale(${scale})`;
-    }
-    window.addEventListener('resize', resizeGame);
+    const scaler = document.getElementById('scaler');
+    const availW = window.innerWidth * 0.96;
+    const availH = window.innerHeight * 0.92;
+    
+    // Base dimensions for the game content
+    const baseW = 720;
+    
+    // Adaptive height: If wide (landscape), we need a shallower base height 
+    // to prevent the board from being cut off at the bottom.
+    const isLandscape = window.innerWidth > window.innerHeight;
+    const baseH = isLandscape ? 520 : 650; 
+
+    const scaleW = availW / baseW;
+    const scaleH = availH / baseH;
+    
+    // Choose the smaller scale to ensure it fits both width and height
+    const finalScale = Math.min(scaleW, scaleH, 1);
+
+    scaler.style.transform = `scale(${finalScale})`;
+}
+
+// Add this listener to ensure it snaps instantly when rotated
+window.addEventListener('orientationchange', () => {
+    setTimeout(resizeGame, 200); // Small delay allows the browser to report new dimensions
+});
 
     function initGame() {
         deck = []; selectedCard = null; roundEnded = false;
