@@ -294,9 +294,14 @@ window.addEventListener('orientationchange', () => {
     }
 
     function showEndModal(isWin) {
+    // 1. Check if the round already ended to prevent double scoring
+        if (roundEnded) return;
         roundEnded = true;
+
         const tc = document.querySelectorAll('.column .card').length;
         const gameScore = isWin ? (5 + deck.length) : -tc;
+        
+        // 2. Set the comments based on your specific tiers
         let comment = "";
         if (isWin) {
             if (gameScore === 5) comment = "Phew! Close one.";
@@ -310,9 +315,13 @@ window.addEventListener('orientationchange', () => {
             else if (gameScore >= -9) comment = "Bummer :/";
             else comment = "Ouch! :(";
         }
+
+        // 3. Update the UI
         document.getElementById('end-title').innerText = isWin ? "VICTORY" : "GAME OVER";
         document.getElementById('end-comment').innerText = comment;
         document.getElementById('end-message').innerText = `Game Score: ${gameScore}`;
+        
+        // 4. Final session score update (Happens exactly once now)
         sessionScore += gameScore;
         document.getElementById('score-val').innerText = sessionScore;
         document.getElementById('end-modal').style.display = 'flex';
