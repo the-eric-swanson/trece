@@ -28,16 +28,25 @@
             transform-origin: center center; width: 720px;
         }
 
-        #header-container { width: 100%; margin-bottom: 75px; position: relative; }
+        /* HEADER & STATS */
+        #header-container { width: 100%; margin-bottom: 85px; position: relative; }
         #header { 
-            width: 100%; display: flex; justify-content: space-between; align-items: baseline; 
+            width: 100%; display: flex; justify-content: space-between; align-items: center; 
             color: var(--gold); padding-bottom: 12px;
             text-shadow: var(--gold-glow);
         }
+        #header h1 { font-weight: 200; letter-spacing: 15px; margin: 0; font-size: 3rem; }
+        
+        .stats-box {
+            display: flex; flex-direction: column; align-items: flex-end;
+            gap: 2px; font-family: "Palatino Linotype", serif;
+            font-size: 1rem; letter-spacing: 1px; text-transform: uppercase;
+        }
+        .record-row { font-size: 0.8rem; opacity: 0.8; letter-spacing: 2px; margin-top: 4px; }
         .gold-line { width: 100%; height: 2px; background: var(--gold); box-shadow: var(--gold-glow); opacity: 0.5; }
 
+        /* TOP BAR SLOTS */
         #top-bar { display: flex; width: 100%; height: 120px; margin-bottom: 30px; position: relative; }
-
         .deck-label {
             position: absolute; top: -55px; left: 0; font-size: 0.85rem; 
             color: var(--gold); letter-spacing: 2px; font-weight: bold;
@@ -47,12 +56,9 @@
         .card, .deck-stack, .slot { 
             width: var(--card-w); height: var(--card-h); 
             border-radius: 8px; position: absolute; bottom: 0;
-            box-sizing: border-box;
-            overflow: hidden;
-            border: 3px solid #fff;
+            box-sizing: border-box; overflow: hidden; border: 3px solid #fff;
         }
 
-        /* CLASSIC ORNATE CARD BACK */
         .deck-stack, .card.facedown { 
             background-color: #0f1c3a !important;
             background-image: 
@@ -69,6 +75,7 @@
         #discard-slot { left: 300px; }
         #success-slot { left: 615px; }
 
+        /* TABLEAU */
         #game-board { display: flex; gap: 12px; align-items: flex-start; width: 100%; justify-content: center; }
         .column { width: var(--card-w); height: 320px; position: relative; }
 
@@ -77,15 +84,11 @@
             display: flex; flex-direction: column; 
             align-items: center; justify-content: space-around; 
             cursor: pointer; position: absolute; 
-            box-shadow: var(--shadow); 
-            user-select: none; transition: transform 0.2s, top 0.2s;
+            box-shadow: var(--shadow); user-select: none; transition: transform 0.2s, top 0.2s;
             padding: 8px 0;
         }
 
-        .card-val { 
-            font-family: "Georgia", serif; 
-            font-size: 2.8rem; font-weight: 700; line-height: 0.8;
-        }
+        .card-val { font-family: "Georgia", serif; font-size: 2.8rem; font-weight: 700; line-height: 0.8; }
         .card-suit { font-size: 2.8rem; line-height: 1; }
 
         .card.facedown * { visibility: hidden; }
@@ -94,10 +97,11 @@
 
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
 
+        /* MODALS & BUTTONS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(8px); }
         .modal-box { background: #0d260b; padding: 35px; border-radius: 15px; text-align: center; width: 340px; border: 3px solid var(--gold); color: white; box-shadow: var(--gold-glow); }
         
-        button { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 12px 24px; cursor: pointer; text-transform: uppercase; font-weight: bold; margin-top: 15px; border-radius: 6px; letter-spacing: 2px; transition: 0.2s; }
+        button { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 12px 24px; cursor: pointer; text-transform: uppercase; font-weight: bold; margin-top: 15px; border-radius: 6px; letter-spacing: 2px; }
         .btn-primary { background: var(--gold); color: #0d260b; border: none; width: 100%; margin-top: 20px; }
     </style>
 </head>
@@ -106,8 +110,12 @@
 <div id="scaler">
     <div id="header-container">
         <div id="header">
-            <h1 style="font-weight: 200; letter-spacing: 12px; margin: 0; font-size: 2.2rem;">TRECE</h1>
-            <div style="font-size: 1.5rem;">SCORE: <span id="score-val">0</span></div>
+            <h1>TRECE</h1>
+            <div class="stats-box">
+                <div>SCORE: <span id="score-val">0</span></div>
+                <div>GAME: <span id="game-val">1</span></div>
+                <div class="record-row">W: <span id="wins-val">0</span> | L: <span id="loss-val">0</span></div>
+            </div>
         </div>
         <div class="gold-line"></div>
     </div>
@@ -129,7 +137,7 @@
 
     <div style="margin-top:40px; display:flex; gap:20px;">
         <button onclick="showRules()">RULES</button>
-        <button onclick="initGame()">DEAL AGAIN</button>
+        <button onclick="initGame()">RESTART</button>
     </div>
 </div>
 
@@ -145,37 +153,31 @@
 
 <script>
     let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false;
+    let gameCounter = 1, wins = 0, losses = 0;
 
     function resizeGame() {
-    const scaler = document.getElementById('scaler');
-    const availW = window.innerWidth * 0.96;
-    const availH = window.innerHeight * 0.92;
-    
-    // Base dimensions for the game content
-    const baseW = 720;
-    
-    // Adaptive height: If wide (landscape), we need a shallower base height 
-    // to prevent the board from being cut off at the bottom.
-    const isLandscape = window.innerWidth > window.innerHeight;
-    const baseH = isLandscape ? 520 : 650; 
+        const scaler = document.getElementById('scaler');
+        const availW = window.innerWidth * 0.96;
+        const availH = window.innerHeight * 0.92;
+        const baseW = 720;
+        const isLandscape = window.innerWidth > window.innerHeight;
+        const baseH = isLandscape ? 520 : 650; 
 
-    const scaleW = availW / baseW;
-    const scaleH = availH / baseH;
-    
-    // Choose the smaller scale to ensure it fits both width and height
-    const finalScale = Math.min(scaleW, scaleH, 1);
+        const finalScale = Math.min(availW / baseW, availH / baseH, 1);
+        scaler.style.transform = `scale(${finalScale})`;
+    }
 
-    scaler.style.transform = `scale(${finalScale})`;
-}
-
-// Add this listener to ensure it snaps instantly when rotated
-window.addEventListener('orientationchange', () => {
-    setTimeout(resizeGame, 200); // Small delay allows the browser to report new dimensions
-});
+    window.addEventListener('resize', resizeGame);
+    window.addEventListener('orientationchange', () => setTimeout(resizeGame, 200));
 
     function initGame() {
+        if (roundEnded) {
+            gameCounter++;
+            document.getElementById('game-val').innerText = gameCounter;
+        }
         deck = []; selectedCard = null; roundEnded = false;
         document.getElementById('end-modal').style.display = 'none';
+        
         const suits = [{s:'\u2660',c:'#1a1a1a'},{s:'\u2665',c:'#b71c1c'},{s:'\u2666',c:'#b71c1c'},{s:'\u2663',c:'#1a1a1a'}];
         const names = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
         for (let suit of suits) for (let i = 0; i < names.length; i++) 
@@ -294,14 +296,15 @@ window.addEventListener('orientationchange', () => {
     }
 
     function showEndModal(isWin) {
-    // 1. Check if the round already ended to prevent double scoring
         if (roundEnded) return;
         roundEnded = true;
+
+        if (isWin) { wins++; document.getElementById('wins-val').innerText = wins; }
+        else { losses++; document.getElementById('loss-val').innerText = losses; }
 
         const tc = document.querySelectorAll('.column .card').length;
         const gameScore = isWin ? (5 + deck.length) : -tc;
         
-        // 2. Set the comments based on your specific tiers
         let comment = "";
         if (isWin) {
             if (gameScore === 5) comment = "Phew! Close one.";
@@ -316,12 +319,10 @@ window.addEventListener('orientationchange', () => {
             else comment = "Ouch! :(";
         }
 
-        // 3. Update the UI
         document.getElementById('end-title').innerText = isWin ? "VICTORY" : "GAME OVER";
         document.getElementById('end-comment').innerText = comment;
         document.getElementById('end-message').innerText = `Game Score: ${gameScore}`;
         
-        // 4. Final session score update (Happens exactly once now)
         sessionScore += gameScore;
         document.getElementById('score-val').innerText = sessionScore;
         document.getElementById('end-modal').style.display = 'flex';
@@ -333,11 +334,10 @@ window.addEventListener('orientationchange', () => {
     window.onload = initGame;
 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            // This fires when the new service worker takes over.
-            window.location.reload(); 
-        });
-}
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload(); 
+      });
+    }
 </script>
 </body>
 </html>
