@@ -389,8 +389,10 @@
         let cooldown = 0;
         let breakMessage = "";
         const dealBtn = document.querySelector('.btn-primary');
-
-        if (gameCounter === 30) {
+        if (gameCounter === 50) {
+            cooldown = 60;
+            breakMessage = "<span class='break-alert' style='color: #ff4d4d;'>50 Games? Time to go outside</span>";
+        } else if (gameCounter === 30) {
             cooldown = 30;
             breakMessage = "<span class='break-alert' style='color: #ff4d4d;'>30 Games: Mandatory 30 second break</span>";
         } else if (gameCounter === 20) {
