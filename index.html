@@ -125,7 +125,7 @@
             border-color: rgba(212, 175, 55, 0.3);
             color: rgba(212, 175, 55, 0.5);
         }
-        
+
     </style>
 </head>
 <body>
@@ -343,21 +343,24 @@
         const tc = document.querySelectorAll('.column .card').length;
         const gameScore = isWin ? (5 + deck.length) : -tc;
         
+       // 1. Determine the Cooldown and Message
         let cooldown = 0;
         let breakMessage = "";
         const dealBtn = document.querySelector('.btn-primary');
 
-        if (gameCounter >= 30) {
+        // Change these to use '===' so they only appear on that specific game count
+        if (gameCounter === 30) {
             cooldown = 30;
-            breakMessage = "<span class='break-alert' style='color: #ff4d4d;'>30 Games: Mandatory 30s Break</span>";
-        } else if (gameCounter >= 20) {
+            breakMessage = "<span class='break-alert' style='color: #ff4d4d;'>30 Games: Mandatory 30 second break</span>";
+        } else if (gameCounter === 20) {
             cooldown = 15;
-            breakMessage = "<span class='break-alert' style='color: #ffaa00;'>20 Games: 15s Breather Required</span>";
-        } else if (gameCounter >= 10) {
+            breakMessage = "<span class='break-alert' style='color: #ffaa00;'>20 Games: Take a breather</span>";
+        } else if (gameCounter === 10) {
             cooldown = 5;
-            breakMessage = "<span class='break-alert' style='color: var(--gold);'>10 Games: Quick 5s Stretch</span>";
-        } else if (gameCounter >= 5) {
-            breakMessage = "<span class='break-alert' style='color: var(--gold); opacity: 0.8;'>5 Games: Great Session So Far</span>";
+            breakMessage = "<span class='break-alert' style='color: var(--gold);'>10 Games: Quick stretch</span>";
+        } else if (gameCounter === 5) {
+            // This will now only show up when the counter is exactly 5
+            breakMessage = "<span class='break-alert' style='color: var(--gold); opacity: 0.8;'>5 games: Ready for a break?</span>";
         }
 
         document.getElementById('end-title').innerText = isWin ? "VICTORY" : "GAME OVER";
