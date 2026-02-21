@@ -101,53 +101,21 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(8px); }
         .modal-box { background: #0d260b; padding: 35px; border-radius: 15px; text-align: center; width: 340px; border: 3px solid var(--gold); color: white; box-shadow: var(--gold-glow); }
         
-        #end-message { 
-            font-size: 1.2rem; 
-            opacity: 0.9; 
-            margin: 20px 0;
-            line-height: 1.8; 
-            text-transform: uppercase;
-        }
+        #end-message { font-size: 1.2rem; opacity: 0.9; margin: 20px 0; line-height: 1.8; text-transform: uppercase; }
+        .break-alert { display: block; margin-top: 12px; font-weight: bold; letter-spacing: 1px; }
 
-        .break-alert {
-            display: block;
-            margin-top: 12px;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-
-        button { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 12px 24px; cursor: pointer; text-transform: uppercase; font-weight: bold; margin-top: 15px; border-radius: 6px; letter-spacing: 2px; }
+        button { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 12px 24px; cursor: pointer; text-transform: uppercase; font-weight: bold; margin-top: 15px; border-radius: 6px; letter-spacing: 2px; transition: opacity 0.3s; }
         .btn-primary { background: var(--gold); color: #0d260b; border: none; width: 100%; margin-top: 20px; }
         
-        button:disabled {
-            cursor: not-allowed;
-            filter: grayscale(0.5);
-            border-color: rgba(212, 175, 55, 0.3);
-            color: rgba(212, 175, 55, 0.5);
-        }
+        button:disabled { cursor: not-allowed; opacity: 0.3; filter: grayscale(0.5); border-color: rgba(212, 175, 55, 0.3); color: rgba(212, 175, 55, 0.5); }
 
-        /* CONFETTI STYLES */
-        .confetti {
-            position: fixed;
-            width: 15px;
-            height: 15px;
-            background-color: var(--gold);
-            z-index: 3000;
-            pointer-events: none;
-            border-radius: 2px;
-        }
-
+        /* CONFETTI */
+        .confetti { position: fixed; width: 15px; height: 15px; background-color: var(--gold); z-index: 3000; pointer-events: none; border-radius: 2px; }
         @keyframes fall {
             0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
             100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
         }
-
-        .confetti.suit::before {
-            content: attr(data-suit);
-            font-size: 20px;
-            color: var(--gold);
-            text-shadow: 0 0 5px rgba(0,0,0,0.5);
-        }
+        .confetti.suit::before { content: attr(data-suit); font-size: 20px; color: var(--gold); text-shadow: 0 0 5px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
@@ -182,7 +150,7 @@
 
     <div style="margin-top:40px; display:flex; gap:20px;">
         <button onclick="showRules()">RULES</button>
-        <button onclick="initGame()">DEAL AGAIN</button>
+        <button id="board-deal-btn" onclick="initGame()">DEAL AGAIN</button>
     </div>
 </div>
 
@@ -191,13 +159,13 @@
         <h2 id="end-title" style="margin-top:0; letter-spacing: 4px; color:var(--gold);"></h2>
         <p id="end-comment" style="font-size: 1.4rem; font-style: italic; margin: 10px 0;"></p>
         <p id="end-message"></p>
-        <button class="btn-primary" onclick="initGame()">DEAL AGAIN</button>
+        <button class="btn-primary" id="modal-deal-btn" onclick="initGame()">DEAL AGAIN</button>
         <button onclick="viewBoard()" style="border:none; opacity:0.6; font-size: 0.7rem;">VIEW THE BOARD</button>
     </div>
 </div>
 
 <script>
-    let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false;
+    let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false, isLocked = false;
     let gameCounter = 1, wins = 0, losses = 0;
 
     function resizeGame() {
@@ -207,15 +175,15 @@
         const baseW = 720;
         const isLandscape = window.innerWidth > window.innerHeight;
         const baseH = isLandscape ? 520 : 650; 
-
         const finalScale = Math.min(availW / baseW, availH / baseH, 1);
         scaler.style.transform = `scale(${finalScale})`;
     }
 
     window.addEventListener('resize', resizeGame);
-    window.addEventListener('orientationchange', () => setTimeout(resizeGame, 200));
+    window.onload = initGame;
 
     function initGame() {
+        if (isLocked) return;
         if (roundEnded) {
             gameCounter++;
             document.getElementById('game-val').innerText = gameCounter;
@@ -342,15 +310,11 @@
 
     function getComment(score, isWin) {
         if (isWin) {
-            if (score === 5) return "Phew! Close one.";
             if (score <= 9) return "Good job!";
-            if (score <= 14) return "Way to go!";
             if (score <= 20) return "Wow!";
             return "Magnificent!";
         } else {
             if (score === -1) return "So close!";
-            if (score >= -5) return "Nice try!";
-            if (score >= -9) return "Bummer :/";
             return "Ouch! :(";
         }
     }
@@ -363,62 +327,45 @@
         const discardCount = document.getElementById('discard-slot').children.length;
         const activeCount = document.getElementById('active-slot').children.length;
         
-        // Perfect: All 24 cards still in deck, none drawn
         let isPerfect = isWin && (deckCount === 24 && discardCount === 0 && activeCount === 0);
-        // Clean Sheet: No cards left in Discard/Active, but some were drawn
         let isCleanSheet = isWin && !isPerfect && (discardCount === 0 && activeCount === 0);
 
         let gameScore = 0;
         if (isWin) {
             wins++;
-            if (isPerfect) {
-                gameScore = 100;
-                triggerPerfectAnimation();
-            } else if (isCleanSheet) {
-                gameScore = 10 + deckCount;
-                if (navigator.vibrate) navigator.vibrate([30, 30, 30]);
-            } else {
-                gameScore = 5 + deckCount;
-            }
+            if (isPerfect) { gameScore = 100; triggerPerfectAnimation(); } 
+            else if (isCleanSheet) { gameScore = 10 + deckCount; if (navigator.vibrate) navigator.vibrate([30, 30, 30]); } 
+            else { gameScore = 5 + deckCount; }
         } else {
             losses++;
-            const tc = document.querySelectorAll('.column .card').length;
-            gameScore = -tc;
+            gameScore = -(document.querySelectorAll('.column .card').length);
         }
 
         let cooldown = 0;
         let breakMessage = "";
-        const dealBtn = document.querySelector('.btn-primary');
+        
+        // Break Scaling Logic
         if (gameCounter % 50 === 0) {
             cooldown = gameCounter;
-            breakMessage = `<span class='break-alert' style='color: #ff4d4d;'>${gameCounter} games? Time to go outside!</span>`;
+            breakMessage = `<span class='break-alert' style='color: #ff4d4d;'>${gameCounter} Games: Mandatory ${cooldown}s Break</span>`;
         } else if (gameCounter === 30) {
             cooldown = 30;
-            breakMessage = "<span class='break-alert' style='color: #ff4d4d;'>30 Games: Mandatory 30 second break</span>";
+            breakMessage = "<span class='break-alert' style='color: #ff4d4d;'>30 Games: 30s Breather</span>";
         } else if (gameCounter === 20) {
             cooldown = 15;
-            breakMessage = "<span class='break-alert' style='color: #ffaa00;'>20 Games: Take a breather</span>";
+            breakMessage = "<span class='break-alert' style='color: #ffaa00;'>20 Games: 15s Breather</span>";
         } else if (gameCounter === 10) {
             cooldown = 5;
-            breakMessage = "<span class='break-alert' style='color: var(--gold);'>10 Games: Quick stretch</span>";
+            breakMessage = "<span class='break-alert' style='color: var(--gold);'>10 Games: Quick Stretch</span>";
         } else if (gameCounter === 5) {
-            breakMessage = "<span class='break-alert' style='color: var(--gold); opacity: 0.8;'>5 games: Ready for a break?</span>";
+            breakMessage = "<span class='break-alert' style='color: var(--gold); opacity: 0.8;'>5 Games: Great Session!</span>";
         }
 
-        // Title and Comment update
-        if (isPerfect) {
-            document.getElementById('end-title').innerText = "PERFECT VICTORY!";
-            document.getElementById('end-comment').innerText = "A 1-IN-2000 MIRACLE!";
-        } else if (isCleanSheet) {
-            document.getElementById('end-title').innerText = "NO CARDS IN THE DISCARD PILE!";
-            document.getElementById('end-comment').innerText = "FLAWLESS EXECUTION";
-        } else {
-            document.getElementById('end-title').innerText = isWin ? "VICTORY" : "GAME OVER";
-            document.getElementById('end-comment').innerText = getComment(gameScore, isWin); 
-        }
+        if (isPerfect) { document.getElementById('end-title').innerText = "PERFECT VICTORY!"; document.getElementById('end-comment').innerText = "A 1-IN-2000 MIRACLE!"; }
+        else if (isCleanSheet) { document.getElementById('end-title').innerText = "CLEAN SHEET!"; document.getElementById('end-comment').innerText = "FLAWLESS EXECUTION"; }
+        else { document.getElementById('end-title').innerText = isWin ? "VICTORY" : "GAME OVER"; document.getElementById('end-comment').innerText = getComment(gameScore, isWin); }
 
         document.getElementById('end-message').innerHTML = `GAME SCORE: ${gameScore}${breakMessage}`;
-        
         sessionScore += gameScore;
         document.getElementById('score-val').innerText = sessionScore;
         document.getElementById('wins-val').innerText = wins;
@@ -426,18 +373,16 @@
         document.getElementById('end-modal').style.display = 'flex';
 
         if (cooldown > 0) {
-            dealBtn.disabled = true;
-            let remaining = cooldown;
-            dealBtn.innerText = `WAIT (${remaining}S)`;
+            isLocked = true;
+            const mBtn = document.getElementById('modal-deal-btn');
+            const bBtn = document.getElementById('board-deal-btn');
+            mBtn.disabled = true; bBtn.disabled = true;
+            let rem = cooldown;
+            mBtn.innerText = `WAIT (${rem}S)`;
             const timer = setInterval(() => {
-                remaining--;
-                if (remaining <= 0) {
-                    clearInterval(timer);
-                    dealBtn.disabled = false;
-                    dealBtn.innerText = "DEAL AGAIN";
-                } else {
-                    dealBtn.innerText = `WAIT (${remaining}S)`;
-                }
+                rem--;
+                if (rem <= 0) { clearInterval(timer); isLocked = false; mBtn.disabled = false; bBtn.disabled = false; mBtn.innerText = "DEAL AGAIN"; } 
+                else { mBtn.innerText = `WAIT (${rem}S)`; }
             }, 1000);
         }
     }
@@ -451,35 +396,20 @@
             c.setAttribute('data-suit', suits[Math.floor(Math.random() * suits.length)]);
             c.style.left = Math.random() * 100 + 'vw';
             c.style.top = '-5vh';
-            const duration = (Math.random() * 3 + 2) + 's';
-            const delay = (Math.random() * 2) + 's';
-            c.style.animation = `fall ${duration} ${delay} linear forwards`;
+            c.style.animation = `fall ${Math.random() * 3 + 2}s ${Math.random() * 2}s linear forwards`;
             document.body.appendChild(c);
             setTimeout(() => c.remove(), 5000);
         }
-
         const body = document.body;
         let flashes = 0;
         const interval = setInterval(() => {
             body.style.background = flashes % 2 === 0 ? "var(--gold)" : "var(--felt)";
-            flashes++;
-            if (flashes === 6) {
-                clearInterval(interval);
-                body.style.background = "var(--felt)";
-            }
+            if (++flashes === 6) { clearInterval(interval); body.style.background = "var(--felt)"; }
         }, 200);
     }
 
-    function showRules() { alert("TRECE RULES:\n1. Pair cards totaling 13 (e.g., 9+4, J+2).\n2. Kings (13) are cleared solo.\n3. Clear the Tableau to win.\n4. Drawing moves Active to Discard.\n5. Only top cards are playable."); }
+    function showRules() { alert("TRECE RULES:\n1. Pair cards totaling 13.\n2. Kings clear solo.\n3. Clear the Tableau to win.\n4. Drawing moves Active to Discard.\n5. Only top cards are playable."); }
     function viewBoard() { document.getElementById('end-modal').style.display = 'none'; }
-
-    window.onload = initGame;
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        window.location.reload(); 
-      });
-    }
 </script>
 </body>
 </html>
