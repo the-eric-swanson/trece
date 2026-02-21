@@ -390,7 +390,7 @@
         let breakMessage = "";
         const dealBtn = document.querySelector('.btn-primary');
         if (gameCounter % 50 === 0) {
-            cooldown = 60;
+            cooldown = gameCounter;
             breakMessage = `<span class='break-alert' style='color: #ff4d4d;'>${gameCounter} games? Time to go outside!</span>`;
         } else if (gameCounter === 30) {
             cooldown = 30;
