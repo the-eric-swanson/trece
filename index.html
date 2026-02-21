@@ -125,38 +125,7 @@
             border-color: rgba(212, 175, 55, 0.3);
             color: rgba(212, 175, 55, 0.5);
         }
-
-        /* ADD THIS TO THE BOTTOM OF YOUR STYLE BLOCK */
-
-    @media (orientation: portrait) {
-        :root {
-            --card-w: 68px;   /* Shrinks the width so 7 columns fit on a narrow screen */
-            --card-h: 96px;   /* Shrinks height to match */
-        }
         
-        #scaler {
-            width: 100vw;    /* Allows the game to use the full width of the phone */
-            padding: 0 5px; 
-        }
-
-        #game-board {
-            gap: 6px;        /* Tightens the space between card columns */
-        }
-
-        #header h1 {
-            font-size: 2.2rem; /* Reduces title size to prevent overlap with stats */
-            letter-spacing: 8px;
-        }
-
-        #header-container {
-            margin-bottom: 40px; /* Pulls the board up so it doesn't bleed off the bottom */
-        }
-
-        #top-bar {
-            height: 100px;   /* Shortens the top area */
-            margin-bottom: 20px;
-        }
-}
     </style>
 </head>
 <body>
