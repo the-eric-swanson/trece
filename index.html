@@ -126,6 +126,28 @@
             color: rgba(212, 175, 55, 0.5);
         }
 
+        /* CONFETTI STYLES */
+        .confetti {
+            position: fixed;
+            width: 15px;
+            height: 15px;
+            background-color: var(--gold);
+            z-index: 3000;
+            pointer-events: none;
+            border-radius: 2px;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        .confetti.suit::before {
+            content: attr(data-suit);
+            font-size: 20px;
+            color: var(--gold);
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body>
@@ -337,18 +359,37 @@
         if (roundEnded) return;
         roundEnded = true;
 
-        if (isWin) { wins++; document.getElementById('wins-val').innerText = wins; }
-        else { losses++; document.getElementById('loss-val').innerText = losses; }
-
-        const tc = document.querySelectorAll('.column .card').length;
-        const gameScore = isWin ? (5 + deck.length) : -tc;
+        const deckCount = deck.length;
+        const discardCount = document.getElementById('discard-slot').children.length;
+        const activeCount = document.getElementById('active-slot').children.length;
         
-       // 1. Determine the Cooldown and Message
+        // Perfect: All 24 cards still in deck, none drawn
+        let isPerfect = isWin && (deckCount === 24 && discardCount === 0 && activeCount === 0);
+        // Clean Sheet: No cards left in Discard/Active, but some were drawn
+        let isCleanSheet = isWin && !isPerfect && (discardCount === 0 && activeCount === 0);
+
+        let gameScore = 0;
+        if (isWin) {
+            wins++;
+            if (isPerfect) {
+                gameScore = 100;
+                triggerPerfectAnimation();
+            } else if (isCleanSheet) {
+                gameScore = 10 + deckCount;
+                if (navigator.vibrate) navigator.vibrate([30, 30, 30]);
+            } else {
+                gameScore = 5 + deckCount;
+            }
+        } else {
+            losses++;
+            const tc = document.querySelectorAll('.column .card').length;
+            gameScore = -tc;
+        }
+
         let cooldown = 0;
         let breakMessage = "";
         const dealBtn = document.querySelector('.btn-primary');
 
-        // Change these to use '===' so they only appear on that specific game count
         if (gameCounter === 30) {
             cooldown = 30;
             breakMessage = "<span class='break-alert' style='color: #ff4d4d;'>30 Games: Mandatory 30 second break</span>";
@@ -359,23 +400,33 @@
             cooldown = 5;
             breakMessage = "<span class='break-alert' style='color: var(--gold);'>10 Games: Quick stretch</span>";
         } else if (gameCounter === 5) {
-            // This will now only show up when the counter is exactly 5
             breakMessage = "<span class='break-alert' style='color: var(--gold); opacity: 0.8;'>5 games: Ready for a break?</span>";
         }
 
-        document.getElementById('end-title').innerText = isWin ? "VICTORY" : "GAME OVER";
-        document.getElementById('end-comment').innerText = getComment(gameScore, isWin); 
+        // Title and Comment update
+        if (isPerfect) {
+            document.getElementById('end-title').innerText = "PERFECT VICTORY!";
+            document.getElementById('end-comment').innerText = "A 1-IN-2000 MIRACLE!";
+        } else if (isCleanSheet) {
+            document.getElementById('end-title').innerText = "NO CARDS IN THE DISCARD PILE!";
+            document.getElementById('end-comment').innerText = "FLAWLESS EXECUTION";
+        } else {
+            document.getElementById('end-title').innerText = isWin ? "VICTORY" : "GAME OVER";
+            document.getElementById('end-comment').innerText = getComment(gameScore, isWin); 
+        }
+
         document.getElementById('end-message').innerHTML = `GAME SCORE: ${gameScore}${breakMessage}`;
         
         sessionScore += gameScore;
         document.getElementById('score-val').innerText = sessionScore;
+        document.getElementById('wins-val').innerText = wins;
+        document.getElementById('loss-val').innerText = losses;
         document.getElementById('end-modal').style.display = 'flex';
 
         if (cooldown > 0) {
             dealBtn.disabled = true;
             let remaining = cooldown;
             dealBtn.innerText = `WAIT (${remaining}S)`;
-            
             const timer = setInterval(() => {
                 remaining--;
                 if (remaining <= 0) {
@@ -387,6 +438,34 @@
                 }
             }, 1000);
         }
+    }
+
+    function triggerPerfectAnimation() {
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 300]);
+        const suits = ['♠', '♥', '♦', '♣'];
+        for (let i = 0; i < 50; i++) {
+            const c = document.createElement('div');
+            c.className = 'confetti suit';
+            c.setAttribute('data-suit', suits[Math.floor(Math.random() * suits.length)]);
+            c.style.left = Math.random() * 100 + 'vw';
+            c.style.top = '-5vh';
+            const duration = (Math.random() * 3 + 2) + 's';
+            const delay = (Math.random() * 2) + 's';
+            c.style.animation = `fall ${duration} ${delay} linear forwards`;
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), 5000);
+        }
+
+        const body = document.body;
+        let flashes = 0;
+        const interval = setInterval(() => {
+            body.style.background = flashes % 2 === 0 ? "var(--gold)" : "var(--felt)";
+            flashes++;
+            if (flashes === 6) {
+                clearInterval(interval);
+                body.style.background = "var(--felt)";
+            }
+        }, 200);
     }
 
     function showRules() { alert("TRECE RULES:\n1. Pair cards totaling 13 (e.g., 9+4, J+2).\n2. Kings (13) are cleared solo.\n3. Clear the Tableau to win.\n4. Drawing moves Active to Discard.\n5. Only top cards are playable."); }
