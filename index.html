@@ -310,11 +310,15 @@
 
     function getComment(score, isWin) {
         if (isWin) {
+            if (score === 5) return "Phew! Close one.";
             if (score <= 9) return "Good job!";
+            if (score <= 14) return "Way to go!";
             if (score <= 20) return "Wow!";
             return "Magnificent!";
         } else {
             if (score === -1) return "So close!";
+            if (score >= -5) return "Nice try!";
+            if (score >= -9) return "Bummer :/";
             return "Ouch! :(";
         }
     }
@@ -362,7 +366,7 @@
         }
 
         if (isPerfect) { document.getElementById('end-title').innerText = "PERFECT VICTORY!"; document.getElementById('end-comment').innerText = "A 1-IN-2000 MIRACLE!"; }
-        else if (isCleanSheet) { document.getElementById('end-title').innerText = "CLEAN SHEET!"; document.getElementById('end-comment').innerText = "FLAWLESS EXECUTION"; }
+        else if (isCleanSheet) { document.getElementById('end-title').innerText = "CLEAN SWEEP!"; document.getElementById('end-comment').innerText = "FLAWLESS EXECUTION"; }
         else { document.getElementById('end-title').innerText = isWin ? "VICTORY" : "GAME OVER"; document.getElementById('end-comment').innerText = getComment(gameScore, isWin); }
 
         document.getElementById('end-message').innerHTML = `GAME SCORE: ${gameScore}${breakMessage}`;
