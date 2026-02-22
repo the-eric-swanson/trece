@@ -412,7 +412,19 @@
         }, 200);
     }
 
-    function showRules() { alert("TRECE RULES:\n1. Pair cards totaling 13.\n2. Kings clear solo.\n3. Clear the Tableau to win.\n4. Drawing moves Active to Discard.\n5. Only top cards are playable."); }
+    function showRules() { 
+        alert("TRECE: THE RULES\n\n" +
+            "OBJECTIVE: Clear all the columns by pairing cards that add up to 13.\n\n" +
+            "HOW TO PLAY:\n" +
+            "- Tap any two cards that add up to 13.\n" +
+            "- Kings are 13: you can clear them by themselves. \n"+
+            "- Queens are 12, Jacks are 11, and Aces are 1\n\n" +
+            "SCORING:\n" +
+            "- Win: 5 points + 1 per card left in the deck.\n" +
+            "- Loss: -1 point for every card left on the board.\n\n"+
+            "GOOD LUCK!"
+        ); 
+    }
     function viewBoard() { document.getElementById('end-modal').style.display = 'none'; }
 </script>
 </body>
