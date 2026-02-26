@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Trece</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <style>
         :root { 
             --felt: radial-gradient(circle at center, #0a2f0a 0%, #051a05 100%);
             --gold: #d4af37;
             --gold-glow: 0 0 15px rgba(212, 175, 55, 0.9);
-            --card-w: 92px;
-            --card-h: 128px;
+            --card-w: 12.8%; 
         }
         
         html, body { 
@@ -20,65 +20,87 @@
             display: flex; align-items: center; justify-content: center;
         }
 
-        #scaler { display: flex; flex-direction: column; align-items: center; width: 95vw; max-width: 820px; }
+        #scaler { display: flex; flex-direction: column; width: 98vw; max-width: 820px; height: 96vh; }
 
-        /* HEADER */
-        #header { width: 100%; display: flex; justify-content: space-between; align-items: flex-end; color: var(--gold); margin-bottom: 30px; padding-bottom: 10px; border-bottom: 2px solid var(--gold); }
-        #header h1 { margin: 0; letter-spacing: 12px; font-weight: 100; font-size: 3rem; text-shadow: var(--gold-glow); line-height: 1.2; }
+        /* HEADER FIX: Masking the line so it doesn't obstruct the Deck label */
+        #header { 
+            width: 100%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-end; 
+            color: var(--gold); 
+            margin-bottom: 20px; 
+            padding-bottom: 8px; 
+            border-bottom: 2px solid var(--gold); 
+            position: relative;
+        }
+        #header h1 { margin: 0; letter-spacing: 6px; font-weight: 100; font-size: clamp(1.8rem, 6vw, 3rem); text-shadow: var(--gold-glow); line-height: 1; }
         
-        .big-stats { display: flex; gap: 30px; font-weight: bold; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px; color: var(--gold); }
-        .stat-item { display: flex; flex-direction: column; align-items: flex-end; text-shadow: var(--gold-glow); }
-        .stat-label { font-size: 0.65rem; opacity: 0.8; }
+        .big-stats { display: flex; gap: 20px; font-weight: bold; font-size: clamp(0.85rem, 2.5vw, 1.1rem); text-transform: uppercase; letter-spacing: 1px; }
+        .stat-item { display: flex; flex-direction: column; align-items: flex-end; }
+        .stat-label { font-size: 0.65rem; opacity: 0.8; margin-bottom: 2px; }
 
-        /* SLOTS */
-        #top-bar { display: flex; width: 100%; height: var(--card-h); margin-bottom: 40px; position: relative; }
-        .slot { width: var(--card-w); height: var(--card-h); border-radius: 8px; position: absolute; background: rgba(0,0,0,0.4); border: 1px solid var(--gold); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
-        #deck-slot { left: 0; cursor: pointer; border: none; background: transparent; }
-        #active-slot { left: 115px; }
-        #discard-slot { left: 230px; }
+        /* DECK LABEL FIX: Sits on the line with a background mask */
+        #deck-label-top { 
+            position: absolute; 
+            bottom: -11px; /* Centers it perfectly on the 2px border */
+            left: 30px; 
+            color: var(--gold); 
+            font-weight: bold; 
+            font-size: 0.85rem; 
+            text-shadow: var(--gold-glow);
+            letter-spacing: 1.5px; 
+            white-space: nowrap; 
+            text-transform: uppercase;
+            background: #082508; /* Matches the felt color to 'cut' the line */
+            padding: 0 10px;
+            z-index: 5;
+        }
+
+        /* TOP BAR */
+        #top-bar { display: flex; width: 100%; height: 18vh; max-height: 130px; margin-bottom: 25px; position: relative; }
+        .slot { width: 12.8%; max-width: 92px; height: 100%; border-radius: 8px; position: absolute; background: rgba(0,0,0,0.4); border: 1px solid var(--gold); box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        #deck-slot { left: 0; width: 12.8%; max-width: 92px; height: 100%; cursor: pointer; border: none; background: transparent; position: absolute; z-index: 10; }
+        #active-slot { left: 14.5%; }
+        #discard-slot { left: 29%; }
         #success-slot { right: 0; border: 2px dashed rgba(212,175,55,0.3); }
 
         /* CARD */
         .card { 
-            width: var(--card-w); height: var(--card-h); 
+            width: 100%; height: 100%; max-width: 92px; max-height: 128px;
             background: white; color: black; border-radius: 8px; border: 1px solid #777;
-            position: absolute; box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), top 0.2s ease, box-shadow 0.3s;
-            display: flex; flex-direction: column; padding: 10px; box-sizing: border-box;
+            position: absolute; box-shadow: 0 4px 8px rgba(0,0,0,0.5); 
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), top 0.2s ease;
+            display: flex; flex-direction: column; padding: 6%; box-sizing: border-box;
             backface-visibility: hidden;
         }
-        .rank { font-size: 2.2rem; font-weight: 900; position: absolute; top: 8px; left: 10px; line-height: 1; }
-        .card-center-suit { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); font-size: 4.2rem; }
+        .rank { font-size: clamp(1.4rem, 5vw, 2.2rem); font-weight: 900; position: absolute; top: 5%; left: 10%; line-height: 1; }
+        .card-center-suit { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); font-size: clamp(2.5rem, 10vw, 4.2rem); }
 
         .card.facedown { 
-            background: #0d1a33 !important; border: 5px solid white;
-            background-image: 
-                linear-gradient(30deg, #1a2a4d 12%, transparent 12.5%, transparent 87%, #1a2a4d 87.5%, #1a2a4d),
-                linear-gradient(150deg, #1a2a4d 12%, transparent 12.5%, transparent 87%, #1a2a4d 87.5%, #1a2a4d),
-                linear-gradient(60deg, #253a63 25%, transparent 25.5%, transparent 75%, #253a63 75%, #253a63) !important;
-            background-size: 20px 35px !important;
+            background: #0d1a33 !important; border: 4px solid white;
+            background-image: linear-gradient(30deg, #1a2a4d 12%, transparent 12.5%, transparent 87%, #1a2a4d 87.5%, #1a2a4d),
+                              linear-gradient(150deg, #1a2a4d 12%, transparent 12.5%, transparent 87%, #1a2a4d 87.5%, #1a2a4d),
+                              linear-gradient(60deg, #253a63 25%, transparent 25.5%, transparent 75%, #253a63 75%, #253a63) !important;
+            background-size: 15px 25px !important;
         }
         .card.facedown * { display: none; }
 
-        .card.selected { margin-top: -25px !important; border: 3px solid var(--gold) !important; z-index: 500 !important; box-shadow: var(--gold-glow) !important; }
+        .card.selected { margin-top: -25px !important; border: 2px solid var(--gold) !important; z-index: 500 !important; box-shadow: var(--gold-glow) !important; }
         .card.error { border: 2px solid #ff4444 !important; animation: fastShake 0.2s; }
-        .card.flying { z-index: 2000 !important; box-shadow: 0 30px 60px rgba(0,0,0,0.6) !important; }
+        .card.flying { z-index: 2000 !important; box-shadow: 0 20px 40px rgba(0,0,0,0.6) !important; }
 
-        @keyframes fastShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        @keyframes fastShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 
         /* MODALS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 3000; }
-        .modal-box { background: #051a05; padding: 30px; border-radius: 12px; text-align: center; width: 380px; border: 3px solid var(--gold); color: white; box-shadow: var(--gold-glow); }
-        .modal-box h2 { margin-top: 0; color: var(--gold); letter-spacing: 3px; }
-        .modal-box p { line-height: 1.6; font-size: 0.95rem; }
-        
-        button { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 12px 24px; cursor: pointer; border-radius: 6px; font-weight: bold; margin: 10px; text-transform: uppercase; letter-spacing: 2px; }
-        .btn-primary { background: var(--gold); color: #051a05; border: none; width: 100%; font-size: 1.1rem; }
-        button:disabled { opacity: 0.3; }
-        
-        #game-board { display: flex; gap: 14px; width: 100%; justify-content: center; height: 420px; }
-        .column { width: var(--card-w); position: relative; }
-        .firework { position: absolute; pointer-events: none; z-index: 4000; font-size: 2rem; }
+        .modal-box { background: #051a05; padding: 30px; border-radius: 12px; text-align: center; width: 85vw; max-width: 380px; border: 3px solid var(--gold); color: white; box-shadow: var(--gold-glow); }
+        button { background: transparent; border: 1px solid var(--gold); color: var(--gold); padding: 12px 20px; cursor: pointer; border-radius: 6px; font-weight: bold; margin: 5px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; }
+        .btn-primary { background: var(--gold); color: #051a05; border: none; width: 100%; font-size: 1.1rem; margin-top: 15px; }
+
+        #game-board { display: flex; width: 100%; justify-content: space-between; height: 50vh; position: relative; }
+        .column { width: 12.8%; max-width: 92px; position: relative; }
+        .firework { position: absolute; pointer-events: none; z-index: 4000; font-size: 1.8rem; }
     </style>
 </head>
 <body>
@@ -86,8 +108,8 @@
 <div id="scaler">
     <div id="header">
         <h1>TRECE</h1>
+        <div id="deck-label-top">DECK: <span id="deck-count">24</span></div>
         <div class="big-stats">
-            <div class="stat-item"><span class="stat-label">Deck</span><span id="deck-count">24</span></div>
             <div class="stat-item"><span class="stat-label">Game</span><span id="game-val">1</span></div>
             <div class="stat-item"><span class="stat-label">Score</span><span id="score-val">0</span></div>
             <div class="stat-item"><span class="stat-label">Record</span><span><span id="wins-val">0</span>/<span id="loss-val">0</span></span></div>
@@ -108,7 +130,7 @@
         <div class="column" id="col-6"></div>
     </div>
 
-    <div style="margin-top:40px; display:flex; gap:20px;">
+    <div style="margin-top:30px; display:flex; gap:15px;">
         <button onclick="openRules()">Rules</button>
         <button id="board-deal-btn" onclick="initGame()">New Deal</button>
     </div>
@@ -117,27 +139,19 @@
 <div class="modal-overlay" id="rules-modal">
     <div class="modal-box" style="text-align: left;">
         <h2 style="text-align: center;">THE HOUSE RULES</h2>
-        <p><strong>OBJECTIVE:</strong> Clear all columns by pairing cards that total <strong>13</strong>.</p>
-        <p><strong>HOW TO PLAY:</strong><br>
-        - Tap any two cards to clear them.<br>
-        - <strong>KINGS</strong>: Worth 13 (Tap to clear solo).<br>
-        - <strong>QUEENS</strong> (12) + <strong>ACE</strong> (1).<br>
-        - <strong>JACKS</strong> (11) + <strong>2</strong>.<br>
-        - Draw from the deck when stuck.</p>
-        <p><strong>SCORING:</strong><br>
-        - Win: +5 pts + 1 per card in deck.<br>
-        - Loss: -1 pt per card on board.</p>
+        <p style="font-size: 0.9rem;"><strong>OBJECTIVE:</strong> Clear all columns by pairing cards totaling 13.</p>
+        <p style="font-size: 0.9rem;">- <strong>KINGS</strong>: 13 (Tap solo).<br>- <strong>QUEENS</strong>(12)+<strong>ACE</strong>(1).<br>- <strong>JACKS</strong>(11)+<strong>2</strong>.</p>
         <button class="btn-primary" onclick="closeRules()">Got it</button>
     </div>
 </div>
 
 <div class="modal-overlay" id="end-modal">
     <div class="modal-box">
-        <h2 id="end-title" style="margin-top:0;"></h2>
+        <h2 id="end-title" style="color:var(--gold); letter-spacing:3px;"></h2>
         <p id="end-comment" style="font-size: 1.8rem; font-style: italic; margin: 20px 0;"></p>
         <p id="end-message" style="font-weight: bold; margin-bottom: 20px;"></p>
         <button id="modal-deal-btn" class="btn-primary" onclick="initGame()">Deal Again</button>
-        <button onclick="viewBoard()" style="border:none; background:transparent; font-size:0.7rem; opacity:0.6; display:block; margin: 15px auto 0;">VIEW THE BOARD</button>
+        <button onclick="viewBoard()" style="border:none; background:transparent; font-size:0.75rem; opacity:0.6; display:block; margin: 10px auto 0;">VIEW THE BOARD</button>
     </div>
 </div>
 
@@ -176,10 +190,10 @@
     function updateDeckVisuals() {
         const ds = document.getElementById('deck-slot');
         ds.innerHTML = '';
-        const stack = Math.ceil(deck.length / 6); 
-        for(let i=0; i < stack; i++) {
+        const stackSize = Math.ceil(deck.length / 6); 
+        for(let i=0; i < stackSize; i++) {
             const b = document.createElement('div'); b.className = 'card facedown';
-            b.style.left = (i*2)+'px'; b.style.top = (i*2)+'px';
+            b.style.left = (i*1.5)+'px'; b.style.top = (i*1.5)+'px';
             ds.appendChild(b);
         }
     }
@@ -215,7 +229,7 @@
         cards.forEach((el, i) => {
             const eRect = el.getBoundingClientRect();
             el.classList.add('flying');
-            el.style.transform = `translate(${sRect.left - eRect.left + (i*6)}px, ${sRect.top - eRect.top}px) scale(1.1) rotate(${i*5}deg)`;
+            el.style.transform = `translate(${sRect.left - eRect.left}px, ${sRect.top - eRect.top}px) scale(1.1)`;
             setTimeout(() => {
                 el.classList.remove('flying', 'selected');
                 el.style.transform = 'none'; el.style.top = '0px';
@@ -232,7 +246,7 @@
         if (active.children.length > 0) {
             const old = active.children[0];
             old.style.zIndex = "100";
-            old.style.transform = "translateX(115px)";
+            old.style.transform = `translateX(${active.offsetWidth * 1.2}px)`;
             setTimeout(() => { old.style.transform = "none"; old.style.zIndex = ""; discard.appendChild(old); reposition(); }, 150);
         }
         if(ds.children.length > 0) {
@@ -258,11 +272,12 @@
     }
 
     function reposition() {
-        for (let i = 0; i < 7; i++) {
-            Array.from(document.getElementById('col-' + i).children).forEach((c, idx) => {
-                c.style.top = (idx * 32) + "px"; c.style.zIndex = idx;
+        document.querySelectorAll('.column').forEach(col => {
+            Array.from(col.children).forEach((c, idx) => {
+                c.style.top = (idx * 22) + "px"; 
+                c.style.zIndex = idx;
             });
-        }
+        });
     }
 
     function updateUI() { document.getElementById('deck-count').innerText = deck.length; }
@@ -304,7 +319,7 @@
         else { losses++; document.querySelectorAll('.facedown').forEach((c, idx) => setTimeout(() => c.classList.remove('facedown'), idx * 50)); }
         const score = isWin ? (isP ? 100 : (isC ? 10 + deck.length : 5 + deck.length)) : -document.querySelectorAll('.column .card').length;
         sessionScore += score;
-        document.getElementById('end-title').innerText = isP ? "PERFECT!" : (isC ? "CLEAN SHEET!" : (isWin ? "VICTORY" : "GAME OVER"));
+        document.getElementById('end-title').innerText = isP ? "PERFECT!" : (isC ? "CLEAN SWEEP!" : (isWin ? "VICTORY" : "GAME OVER"));
         document.getElementById('end-comment').innerText = getComment(score, isWin);
         let cooldown = (gameCounter % 50 === 0) ? gameCounter : (gameCounter === 30 ? 30 : (gameCounter === 20 ? 15 : (gameCounter === 10 ? 5 : 0)));
         document.getElementById('end-message').innerHTML = `GAME SCORE: ${score}${cooldown > 0 ? `<br><span style='font-size:0.8rem; color:var(--gold);'>${cooldown}s Break Active</span>` : ""}`;
