@@ -93,6 +93,33 @@
         .btn-primary { background: var(--gold); color: #051a05; border: none; width: 100%; font-size: 1rem; margin-top: 10px; }
 
         .firework { position: absolute; pointer-events: none; z-index: 4000; font-size: 1.8rem; }
+
+        @media (min-width: 1024px) {
+            #header h1 { font-size: 3.5rem; } /* Beefy Title */
+            .big-stats { gap: 30px; }
+            .stat-item { font-size: 1.4rem; } /* Larger Score/Record */
+            .stat-label { font-size: 0.8rem; }
+            #deck-label-top { font-size: 1rem; bottom: -14px; }
+        }
+
+        @media (max-width: 600px) and (orientation: portrait) {
+            :root { --card-w: 13.2%; } /* Slightly wider columns */
+            .card { 
+                aspect-ratio: 2.5 / 3.5; /* Standard playing card ratio */
+                max-height: none; 
+            }
+            #game-board { height: 55vh; } /* Give more vertical room for the stack */
+        }
+
+        @media (max-height: 500px) and (orientation: landscape) {
+            #scaler { padding-top: 5px; justify-content: flex-start; }
+            #header { margin-bottom: 10px; padding-bottom: 5px; }
+            #header h1 { font-size: 1.2rem; }
+            #top-bar { height: 20vh; margin: 5px 0; }
+            #game-board { height: 40vh; }
+            /* Hide the footer buttons or make them smaller to save space */
+            #scaler > div:last-child { margin-top: 5px; } 
+        }
     </style>
 </head>
 <body>
@@ -302,25 +329,51 @@
 
     function check() {
         const boardCards = document.querySelectorAll('.column .card').length;
-        if (boardCards === 0) { setTimeout(() => end(true), 400); return; }
         
-        const columnTops = Array.from(document.querySelectorAll('.column')).map(col => col.lastElementChild).filter(c => c && !c.classList.contains('facedown'));
+        // 1. If the board is clear, you win.
+        if (boardCards === 0) { 
+            setTimeout(() => end(true), 400); 
+            return; 
+        }
+        
+        // 2. Gather every card currently available to the player.
+        const columnTops = Array.from(document.querySelectorAll('.column'))
+                                .map(col => col.lastElementChild)
+                                .filter(c => c && !c.classList.contains('facedown'));
+        
         const activeCard = document.getElementById('active-slot').lastElementChild;
         const discardTop = document.getElementById('discard-slot').lastElementChild;
 
-        const playable = [...columnTops];
-        if (activeCard) playable.push(activeCard);
-        if (discardTop) playable.push(discardTop);
+        // Build the pool of cards that can actually be clicked.
+        const masterPool = [...columnTops];
+        if (activeCard) masterPool.push(activeCard);
+        if (discardTop) masterPool.push(discardTop);
         
         let moves = false;
-        for (let i = 0; i < playable.length; i++) {
-            const v1 = parseInt(playable[i].dataset.v);
-            if (v1 === 13) moves = true;
-            for (let j = i + 1; j < playable.length; j++) if (v1 + parseInt(playable[j].dataset.v) === 13) moves = true;
+
+        // 3. Mathematical Scan for ALL pairs of 13.
+        for (let i = 0; i < masterPool.length; i++) {
+            const v1 = parseInt(masterPool[i].dataset.v);
+            
+            // Check for solo Kings.
+            if (v1 === 13) { moves = true; break; }
+            
+            // Check v1 against every other card in the pool.
+            for (let j = 0; j < masterPool.length; j++) {
+                if (i === j) continue; // Don't pair a card with itself.
+                if (v1 + parseInt(masterPool[j].dataset.v) === 13) {
+                    moves = true;
+                    break;
+                }
+            }
             if (moves) break;
         }
         
-        if (!moves && deck.length === 0) setTimeout(() => end(false), 1600);
+        // 4. Only trigger Game Over if moves are 0 AND the deck is empty.
+        if (!moves && deck.length === 0) {
+            // 1.6s delay gives you time to see the board before the modal pops.
+            setTimeout(() => end(false), 1600);
+        }
     }
 
     function end(isWin) {
