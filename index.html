@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <title>Trece</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23082308'/><text y='75' x='12' font-size='70' fill='%23d4af37' font-family='Georgia'>13</text></svg>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">    <style>
         :root { 
             --felt: radial-gradient(circle at center, #0a2f0a 0%, #051a05 100%);
             --gold: #d4af37;
@@ -102,28 +101,208 @@
             #deck-label-top { font-size: 1rem; bottom: -14px; }
         }
 
+    /*Mobile-specific CSS udpates*/
+        /* PORTRAIT */
         @media (max-width: 600px) and (orientation: portrait) {
-            :root { --card-w: 13.5%; } 
-            .card { 
-                aspect-ratio: 2.5 / 3.5; 
-                max-height: 120px; 
+            :root { 
+                --card-w: 12.8vw; /* Precision width to fit 7 columns perfectly */
             }
-            /* Shrink the vertical gap between stacked cards so they stay on screen */
-            .column { height: auto; min-height: 120px; }
-            #game-board { height: 50vh; align-items: flex-start; }
-        }
 
-        @media (max-height: 500px) and (orientation: landscape) {
             #scaler { 
-                padding-top: 5px; 
-                justify-content: flex-start;
-                gap: 5px;
+                height: 100dvh;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-end; 
+                padding: 0 2% env(safe-area-inset-bottom) 2%;
+                box-sizing: border-box;
             }
-            #header { margin-bottom: 5px; padding-bottom: 2px; }
-            #header h1 { font-size: 1.2rem; }
-            #top-bar { height: 60px; margin: 5px 0; }
-            #game-board { height: 180px; }
-            .big-stats { gap: 8px; font-size: 0.7rem; }
+
+            /* 1. Large High-Contrast Dashboard */
+            #header { margin-bottom: auto; padding-top: 25px; }
+            #header h1 { font-size: 2.8rem; margin-bottom: 10px; }
+            .big-stats { gap: 20px; justify-content: center; }
+            .stat-item { font-size: 1.4rem; color: var(--gold); }
+            .stat-label { font-size: 0.75rem; text-transform: uppercase; }
+
+           /* High-Visibility Center-Aligned Deck Label */
+           #deck-label-top { 
+                font-size: 0.95rem !important; 
+                font-weight: bold !important;
+                color: var(--gold) !important;
+                margin-top: 15px !important;
+                
+                /* Perfect centering and alignment */
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important; 
+                gap: 10px !important;
+                
+                text-transform: uppercase !important;
+                letter-spacing: 1.5px !important;
+            }
+
+            /* The Big Glowing Number */
+            #deck-count {
+                font-size: 1.5rem !important; /* Matches the bold landscape feel */
+                text-shadow: var(--gold-glow) !important;
+                font-weight: 900 !important;
+                line-height: 1 !important; /* Keeps it tight on the center line */
+            }
+
+            /* 2. Top Bar: Absolute Lanes */
+            #top-bar { 
+                height: calc(var(--card-w) * 1.4); 
+                position: relative; 
+                margin-bottom: 35px;
+                width: 100%;
+            }
+            .slot, .card { 
+                width: var(--card-w) !important;
+                aspect-ratio: 2.5 / 3.5 !important; 
+                height: auto !important;
+            }
+            
+            #deck-slot    { position: absolute; left: 0; }
+            #active-slot  { position: absolute; left: 16%; }
+            #discard-slot { position: absolute; left: 32%; }
+            #success-slot { position: absolute; right: 0; }
+
+            /* 3. The Tableau: Grid Alignment to prevent overlap */
+            #game-board { 
+                display: flex;
+                justify-content: space-between; /* Forces columns to spread out */
+                width: 100%;
+                height: 45vh; 
+                margin-bottom: 20px;
+            }
+            .column { 
+                width: var(--card-w); 
+                position: relative; 
+            }
+        }
+       /* LANDSCAPE: */
+        @media (max-height: 500px) and (orientation: landscape) {
+            #scaler {
+                display: block !important;
+                height: 100dvh !important;
+                width: 100vw !important;
+                padding: 0 !important;
+            }
+        /* 1. SIDEBAR: The Centered Control Tower */
+        #header {
+                position: fixed !important;
+                left: 0 !important; top: 0 !important;
+                width: 130px !important; 
+                height: 100dvh !important;
+                display: flex !important;
+                flex-direction: column !important;
+                justify-content: flex-start !important; 
+                padding: 20px 10px !important; 
+                border-right: 1.5px solid var(--gold);
+                border-bottom: none !important;
+                background: rgba(0,0,0,0.3);
+                box-sizing: border-box;
+                z-index: 100;
+                /* THIS ALIGNS EVERYTHING IN THE SIDEBAR TO THE CENTER */
+                align-items: center !important; 
+            }
+
+            #header h1 { 
+                font-size: 1.8rem !important; 
+                margin: 0 0 10px 0 !important; 
+                text-align: center;
+                text-shadow: var(--gold-glow);
+                width: 100%;
+            }
+            
+            .big-stats { 
+                display: flex !important;
+                flex-direction: column !important; 
+                gap: 12px !important; 
+                margin: 5px 0 !important;
+                align-items: center !important; /* Centering the Game/Score labels */
+                width: 100%;
+            }
+            
+            .stat-item { 
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important; /* Centering the numbers within the items */
+                color: var(--gold) !important;
+                font-size: 1.4rem !important; 
+                font-weight: bold !important;
+                text-shadow: var(--gold-glow) !important;
+                line-height: 1.1;
+            }
+
+            /* Single-Line Deck Label: Gold and Easy to Read */
+            #deck-label-top {
+                position: static !important;
+                margin: 15px auto !important;
+                font-size: 0.85rem !important; 
+                color: var(--gold) !important;
+                text-shadow: var(--gold-glow) !important;
+                background: transparent !important;
+                display: flex !important;
+                gap: 6px;
+                align-items: baseline;
+                white-space: nowrap; /* Forces same line */
+            }
+
+            #deck-count {
+                font-size: 1.2rem !important; /* Larger than 'DECK' but stays on same line */
+                font-weight: 900 !important;
+            }
+
+            /* Buttons: Remain fixed to the bottom edge */
+            #scaler > div:last-child {
+                position: fixed !important;
+                left: 0 !important; bottom: 0 !important;
+                width: 130px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                padding: 10px !important;
+                gap: 4px !important;
+                z-index: 101;
+                box-sizing: border-box;
+            }
+            #scaler button { width: 100% !important; font-size: 0.6rem !important; padding: 5px 0 !important; margin: 0 !important; }
+
+            /* 2. PLAY AREA: Center-constrained like iPhone SE */
+            :root { --land-w: 8.8vw; } 
+
+            #top-bar, #game-board {
+                margin-left: 160px !important; /* Clears the sidebar */
+                width: 72vw !important; /* Prevents wide stretching on Pixel 7 */
+                max-width: 620px !important;
+                margin-right: auto !important;
+            }
+
+            #top-bar {
+                height: 25vh !important;
+                margin-top: 20px !important;
+                display: flex !important;
+                justify-content: flex-start !important;
+                gap: 20px !important; /* Keeps Deck/Active/Discard tight */
+            }
+
+            #success-slot { margin-left: auto !important; }
+
+            #game-board {
+                margin-top: 25px !important;
+                display: flex !important;
+                justify-content: space-between !important;
+            }
+
+            .column { width: var(--land-w) !important; position: relative !important; }
+
+            .card { 
+                position: absolute !important; 
+                width: 100% !important; 
+                height: 25vh !important;
+                max-height: 110px !important; /* Maintain that tall look */
+                box-sizing: border-box !important;
+            }
         }
     </style>
 </head>
@@ -157,6 +336,7 @@
     <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
         <button onclick="openRules()">About this game</button>
         <button id="board-deal-btn" onclick="initGame()">Deal again</button>
+        <button onclick="toggleFullscreen()">Fullscreen</button>
     </div>
 </div>
 
@@ -225,10 +405,10 @@
     function updateDeckVisuals() {
         const ds = document.getElementById('deck-slot');
         ds.innerHTML = '';
-        const stackSize = Math.ceil(deck.length / 6); 
-        for(let i=0; i < stackSize; i++) {
-            const b = document.createElement('div'); b.className = 'card facedown';
-            b.style.left = (i*1.5)+'px'; b.style.top = (i*1.5)+'px';
+        if (deck.length > 0) {
+            const b = document.createElement('div');
+            b.className = 'card facedown';
+            // The CSS will now automatically size this to match the slot
             ds.appendChild(b);
         }
     }
@@ -307,9 +487,13 @@
     }
 
     function reposition() {
+        const isLandscape = window.innerHeight < 500;
+        // 20px fan utilizes the bottom of the screen effectively for tall cards
+        const spacing = isLandscape ? 20 : (window.innerWidth < 600 ? 16 : 22);
+        
         document.querySelectorAll('.column').forEach(col => {
             Array.from(col.children).forEach((c, idx) => {
-                c.style.top = (idx * 22) + "px"; 
+                c.style.top = (idx * spacing) + "px"; 
                 c.style.zIndex = idx;
             });
         });
@@ -345,10 +529,12 @@
             }
         });
 
-        // Scan Active & Discard
+        // Scan Active
         const active = document.getElementById('active-slot').lastElementChild;
-        const discard = document.getElementById('discard-slot').lastElementChild;
         if (active) masterPool.push(active);
+
+        // FIX: Scan Discard (The top card of the discard pile is playable!)
+        const discard = document.getElementById('discard-slot').lastElementChild;
         if (discard) masterPool.push(discard);
 
         let moves = false;
@@ -374,7 +560,7 @@
         const dc = document.getElementById('discard-slot').children.length, ac = document.getElementById('active-slot').children.length;
         let isP = isWin && (deck.length === 24 && dc === 0 && ac === 0);
         let isC = isWin && !isP && (dc === 0 && ac === 0);
-        if (isWin) { wins++; triggerFireworks(isP ? 120 : 60); }
+        if (isWin) { wins++; triggerWinAnimation(); triggerFireworks(isP ? 120 : 60); }
         else { losses++; document.querySelectorAll('.facedown').forEach((c, idx) => setTimeout(() => c.classList.remove('facedown'), idx * 50)); }
         
         const score = isWin ? (isP ? 100 : (isC ? 10 + deck.length : 5 + deck.length)) : -document.querySelectorAll('.column .card').length;
@@ -397,6 +583,57 @@
         }
     }
 
+    function triggerWinAnimation() {
+        const container = document.body;
+        const cardCount = 40; // Number of cards in the waterfall
+        const suits = ['♠', '♥', '♦', '♣'];
+        const colors = ['black', '#d32f2f', '#d32f2f', 'black'];
+
+        for (let i = 0; i < cardCount; i++) {
+            setTimeout(() => {
+                const card = document.createElement('div');
+                const suitIdx = Math.floor(Math.random() * 4);
+                card.className = 'card';
+                card.style.position = 'fixed';
+                card.style.zIndex = '5000';
+                card.style.width = '80px';
+                card.style.height = '112px';
+                card.style.left = Math.random() * 100 + 'vw';
+                card.style.top = '-120px';
+                card.style.color = colors[suitIdx];
+                card.innerHTML = `<div class="rank">${['A','J','Q','K'][Math.floor(Math.random()*4)]}</div>
+                                <div class="card-center-suit">${suits[suitIdx]}</div>`;
+                
+                container.appendChild(card);
+
+                let velocityY = 0;
+                let posX = parseFloat(card.style.left);
+                let posY = -120;
+                const gravity = 0.5;
+                const bounce = -0.7;
+
+                const anim = setInterval(() => {
+                    velocityY += gravity;
+                    posY += velocityY;
+
+                    // Bounce off the bottom
+                    if (posY + 112 > window.innerHeight) {
+                        posY = window.innerHeight - 112;
+                        velocityY *= bounce;
+                    }
+
+                    card.style.top = posY + 'px';
+
+                    // Remove card after it stops bouncing or falls off
+                    if (posY > window.innerHeight + 200 || Math.abs(velocityY) < 0.1 && posY > window.innerHeight - 120) {
+                        clearInterval(anim);
+                        card.remove();
+                    }
+                }, 20);
+            }, i * 150); // Stagger the cards
+        }
+    }
+
     function triggerFireworks(count) {
         for (let i = 0; i < count; i++) {
             const f = document.createElement('div'); f.className = 'firework';
@@ -406,6 +643,16 @@
             const a = Math.random()*Math.PI*2, d = Math.random()*600;
             f.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(0)`,opacity:0}], 1500 + Math.random()*1000);
             setTimeout(() => f.remove(), 2500);
+        }
+    }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.log(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
         }
     }
 
