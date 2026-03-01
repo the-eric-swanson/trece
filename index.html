@@ -450,6 +450,15 @@
                 el.style.transform = 'none'; el.style.top = '0px';
                 el.style.zIndex = success.children.length + 100;
                 success.appendChild(el);
+
+                // --- ADD THIS WATCHER HERE ---
+                // Check the tableau count IMMEDIATELY after the card is moved
+                if (document.querySelectorAll('.column .card').length === 0) {
+                    end(true);
+                    return; // Stop further execution for this card
+                }
+                // -----------------------------
+
                 if(i === cards.length-1) { reveal(); reposition(); check(); }
             }, 300);
         });
@@ -472,19 +481,38 @@
             flipping.style.transform = `translate(${acRect.left - dsRect.left}px, 0) rotateY(90deg)`;
             setTimeout(() => { flipping.remove(); renderCard(deck.pop(), 'active-slot', 0, false); updateUI(); updateDeckVisuals(); check(); }, 200);
         }
+        
     }
 
     function reveal() {
-        document.querySelectorAll('.column').forEach(col => {
+        let flippedCount = 0;
+        const columns = document.querySelectorAll('.column');
+        
+        columns.forEach(col => {
             if (col.children.length > 0) {
                 const last = col.lastElementChild;
                 if (last.classList.contains('facedown')) {
+                    flippedCount++;
                     last.style.transform = "rotateY(90deg)";
-                    setTimeout(() => { last.classList.remove('facedown'); last.style.transform = "rotateY(0deg)"; check()}, 100);
+                    setTimeout(() => { 
+                        last.classList.remove('facedown'); 
+                        last.style.transform = "rotateY(0deg)";
+                        // Only check after the VERY LAST card in the loop has flipped
+                        flippedCount--;
+                        if (flippedCount === 0) check(); 
+                    }, 100);
                 }
             }
         });
-        if (!flipped) check();
+
+        const boardCards = document.querySelectorAll('.column .card').length;
+        if (boardCards === 0) {
+            end(true); // Instant win, no timeout
+            return;
+        }
+
+        // If nothing was flipped, check immediately
+        if (flippedCount === 0) check();
     }
 
     function reposition() {
@@ -519,7 +547,7 @@
 
     function check() {
         const boardCards = document.querySelectorAll('.column .card').length;
-        if (boardCards === 0) { setTimeout(() => end(true), 400); return; }
+        if (boardCards === 0) { end(true); return; }
 
         const masterPool = [];
         
