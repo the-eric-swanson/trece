@@ -480,10 +480,11 @@
                 const last = col.lastElementChild;
                 if (last.classList.contains('facedown')) {
                     last.style.transform = "rotateY(90deg)";
-                    setTimeout(() => { last.classList.remove('facedown'); last.style.transform = "rotateY(0deg)"; }, 100);
+                    setTimeout(() => { last.classList.remove('facedown'); last.style.transform = "rotateY(0deg)"; check()}, 100);
                 }
             }
         });
+        if (!flipped) check();
     }
 
     function reposition() {
