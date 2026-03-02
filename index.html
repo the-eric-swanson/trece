@@ -372,6 +372,7 @@
        - 1.6s Delay on Loss
     */
     let lossTimer = null; // Tracks the pending "Game Over"
+    let winTimer = null; // New variable to protect the victory trigger
     let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false, isLocked = false;
     let wins = 0, losses = 0, gameCounter = 1;
 
@@ -382,6 +383,7 @@
     }
 
     function initGame() {
+        if (winTimer) { clearTimeout(winTimer); winTimer = null; }
         if (isLocked) return;
         if (roundEnded) { gameCounter++; document.getElementById('game-val').innerText = gameCounter; }
         roundEnded = false; selectedCard = null;
@@ -452,15 +454,11 @@
                 el.style.zIndex = success.children.length + 100;
                 success.appendChild(el);
 
-                // --- ADD THIS WATCHER HERE ---
-                // Check the tableau count IMMEDIATELY after the card is moved
-                if (document.querySelectorAll('.column .card').length === 0) {
-                    end(true);
-                    return; // Stop further execution for this card
+                // Hand off the logic to the centralized check()
+                if(i === cards.length-1) { 
+                    reposition(); 
+                    reveal(); 
                 }
-                // -----------------------------
-
-                if(i === cards.length-1) { reveal(); reposition(); check(); }
             }, 300);
         });
     }
@@ -554,15 +552,44 @@
     }
 
     function check() {
-        // ALWAYS clear any pending loss timer at the start of a new check
-        if (lossTimer) { clearTimeout(lossTimer); lossTimer = null; }
+        const tableau = document.querySelectorAll('.column .card');
+        const tableauCount = tableau.length;
+        
+        // DIAGNOSTIC LOGS
+        console.log("--- TRECE DIAGNOSTIC ---");
+        console.log("Tableau Card Count:", tableauCount);
+        console.log("Deck Length:", deck.length);
+        console.log("WinTimer Active?:", !!winTimer);
+        console.log("Round Already Ended?:", roundEnded);
 
-        const boardCards = document.querySelectorAll('.column .card').length;
-        if (boardCards === 0) { 
-            setTimeout(() => { if (!roundEnded) end(true); }, 600); 
+        if (lossTimer) { 
+            console.log("Clearing pending Loss Timer");
+            clearTimeout(lossTimer); 
+            lossTimer = null; 
+        }
+
+        // 1. THE WIN CHECK
+        if (tableauCount === 0) {
+            console.log("WIN DETECTED: Board is empty.");
+            if (winTimer) {
+                console.warn("WIN BLOCKED: A winTimer is already counting down.");
+                return;
+            }
+            if (roundEnded) {
+                console.warn("WIN BLOCKED: roundEnded is already true.");
+                return;
+            }
+
+            console.log("Initiating Win Modal in 500ms...");
+            winTimer = setTimeout(() => {
+                console.log("Executing end(true) now.");
+                end(true);
+                winTimer = null;
+            }, 500);
             return; 
         }
 
+        // 2. MOVE SCANNING
         const masterPool = [];
         document.querySelectorAll('.column').forEach(col => {
             if (col.lastElementChild && !col.lastElementChild.classList.contains('facedown')) {
@@ -585,12 +612,20 @@
             if (moves) break;
         }
 
-        // If we are truly stuck, start the timer, but save it to our variable
+        console.log("Moves Available:", moves);
+
+        // 3. THE LOSS CHECK
         if (!moves && deck.length === 0) {
+            console.log("LOSS DETECTED: No moves and deck is empty.");
             lossTimer = setTimeout(() => {
-                if (!roundEnded) end(false);
+                if (!roundEnded) {
+                    console.log("Executing end(false) now.");
+                    end(false);
+                }
+                lossTimer = null;
             }, 1600);
         }
+        console.log("------------------------");
     }
 
     function end(isWin) {
