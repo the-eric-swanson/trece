@@ -371,6 +371,7 @@
        - Fisher-Yates Shuffle with cut
        - 1.6s Delay on Loss
     */
+    let lossTimer = null; // Tracks the pending "Game Over"
     let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false, isLocked = false;
     let wins = 0, losses = 0, gameCounter = 1;
 
@@ -479,8 +480,15 @@
             flipping.style.zIndex = "200";
             flipping.style.transition = "transform 0.2s ease-in";
             flipping.style.transform = `translate(${acRect.left - dsRect.left}px, 0) rotateY(90deg)`;
-            setTimeout(() => { flipping.remove(); renderCard(deck.pop(), 'active-slot', 0, false); updateUI(); updateDeckVisuals(); check(); }, 200);
-        }
+            setTimeout(() => { 
+            flipping.remove(); 
+            renderCard(deck.pop(), 'active-slot', 0, false); 
+            updateUI(); 
+            updateDeckVisuals(); 
+            // Wait an extra 50ms for the DOM to register the new card
+            setTimeout(check, 50); 
+        }, 200);
+                }
         
     }
 
@@ -488,30 +496,30 @@
         let flippedCount = 0;
         const columns = document.querySelectorAll('.column');
         
+        // 1. Immediate Win Check (Board is empty)
+        const boardCards = document.querySelectorAll('.column .card').length;
+        if (boardCards === 0) { check(); return; }
+
         columns.forEach(col => {
             if (col.children.length > 0) {
                 const last = col.lastElementChild;
+                // 2. Identify cards that NEED to flip
                 if (last.classList.contains('facedown')) {
                     flippedCount++;
                     last.style.transform = "rotateY(90deg)";
                     setTimeout(() => { 
                         last.classList.remove('facedown'); 
                         last.style.transform = "rotateY(0deg)";
-                        // Only check after the VERY LAST card in the loop has flipped
+                        
                         flippedCount--;
+                        // 3. THE FIX: Only rebuild the masterPool AFTER the last flip
                         if (flippedCount === 0) check(); 
-                    }, 100);
+                    }, 150); // Increased to 150ms to ensure DOM stability
                 }
             }
         });
 
-        const boardCards = document.querySelectorAll('.column .card').length;
-        if (boardCards === 0) {
-            end(true); // Instant win, no timeout
-            return;
-        }
-
-        // If nothing was flipped, check immediately
+        // 4. Fallback: If no cards needed to flip, check the board state anyway
         if (flippedCount === 0) check();
     }
 
@@ -546,70 +554,77 @@
     }
 
     function check() {
+        // ALWAYS clear any pending loss timer at the start of a new check
+        if (lossTimer) { clearTimeout(lossTimer); lossTimer = null; }
+
         const boardCards = document.querySelectorAll('.column .card').length;
-        if (boardCards === 0) { end(true); return; }
+        if (boardCards === 0) { 
+            setTimeout(() => { if (!roundEnded) end(true); }, 600); 
+            return; 
+        }
 
         const masterPool = [];
-        
-        // Scan Columns
         document.querySelectorAll('.column').forEach(col => {
             if (col.lastElementChild && !col.lastElementChild.classList.contains('facedown')) {
                 masterPool.push(col.lastElementChild);
             }
         });
 
-        // Scan Active
-        const active = document.getElementById('active-slot').lastElementChild;
-        if (active) masterPool.push(active);
-
-        // FIX: Scan Discard (The top card of the discard pile is playable!)
         const discard = document.getElementById('discard-slot').lastElementChild;
         if (discard) masterPool.push(discard);
+        const active = document.getElementById('active-slot').lastElementChild;
+        if (active) masterPool.push(active);
 
         let moves = false;
         for (let i = 0; i < masterPool.length; i++) {
             const v1 = parseInt(masterPool[i].dataset.v);
-            if (v1 === 13) { moves = true; break; } // King found
+            if (v1 === 13) { moves = true; break; } 
             for (let j = i + 1; j < masterPool.length; j++) {
-                if (v1 + parseInt(masterPool[j].dataset.v) === 13) { 
-                    moves = true; 
-                    break; 
-                }
+                if (v1 + parseInt(masterPool[j].dataset.v) === 13) { moves = true; break; }
             }
             if (moves) break;
         }
 
+        // If we are truly stuck, start the timer, but save it to our variable
         if (!moves && deck.length === 0) {
-            setTimeout(() => end(false), 1600);
+            lossTimer = setTimeout(() => {
+                if (!roundEnded) end(false);
+            }, 1600);
         }
-}
+    }
 
     function end(isWin) {
         if (roundEnded) return; roundEnded = true;
         const dc = document.getElementById('discard-slot').children.length, ac = document.getElementById('active-slot').children.length;
         let isP = isWin && (deck.length === 24 && dc === 0 && ac === 0);
         let isC = isWin && !isP && (dc === 0 && ac === 0);
-        if (isWin) { wins++; triggerWinAnimation(); triggerFireworks(isP ? 120 : 60); }
-        else { losses++; document.querySelectorAll('.facedown').forEach((c, idx) => setTimeout(() => c.classList.remove('facedown'), idx * 50)); }
         
         const score = isWin ? (isP ? 100 : (isC ? 10 + deck.length : 5 + deck.length)) : -document.querySelectorAll('.column .card').length;
         
+        if (isWin) { 
+            wins++; 
+            if (score >= 20) triggerWinAnimation(); // Only Magnificent wins
+            triggerFireworks(isP ? 120 : 60); 
+        } else { 
+            losses++; 
+            if (score <= -10) triggerLossAnimation(); // Bummer Rain
+            // Reveal loss cards with high visibility
+            document.querySelectorAll('.facedown').forEach((c, idx) => {
+                setTimeout(() => {
+                    c.classList.remove('facedown');
+                    c.style.opacity = "1";
+                    c.style.filter = "brightness(1.2) drop-shadow(0 0 2px white)";
+                }, idx * 50);
+            });
+        }
+        
         sessionScore += score;
+        document.getElementById('score-val').innerText = sessionScore;
+        document.getElementById('wins-val').innerText = wins; 
+        document.getElementById('loss-val').innerText = losses;
         document.getElementById('end-title').innerText = isP ? "PERFECT!" : (isC ? "CLEAN SWEEP!" : (isWin ? "VICTORY" : "GAME OVER"));
         document.getElementById('end-comment').innerText = getComment(score, isWin);
-        let cooldown = (gameCounter % 50 === 0) ? gameCounter : (gameCounter === 30 ? 30 : (gameCounter === 20 ? 15 : (gameCounter === 10 ? 5 : 0)));
-        document.getElementById('end-message').innerHTML = `GAME SCORE: ${score}${cooldown > 0 ? `<br><span style='font-size:0.8rem; color:var(--gold);'>${cooldown}s Break Active</span>` : ""}`;
-        document.getElementById('score-val').innerText = sessionScore;
-        document.getElementById('wins-val').innerText = wins; document.getElementById('loss-val').innerText = losses;
         document.getElementById('end-modal').style.display = 'flex';
-        
-        if (cooldown > 0) {
-            isLocked = true;
-            const mBtn = document.getElementById('modal-deal-btn'), bBtn = document.getElementById('board-deal-btn');
-            mBtn.disabled = bBtn.disabled = true;
-            let rem = cooldown;
-            const timer = setInterval(() => { mBtn.innerText = `WAIT (${--rem}S)`; if (rem <= 0) { clearInterval(timer); isLocked = false; mBtn.disabled = bBtn.disabled = false; mBtn.innerText = "DEAL AGAIN"; } }, 1000);
-        }
     }
 
     function triggerWinAnimation() {
@@ -663,17 +678,33 @@
         }
     }
 
-    function triggerFireworks(count) {
-        for (let i = 0; i < count; i++) {
-            const f = document.createElement('div'); f.className = 'firework';
-            f.innerText = ['♠', '♥', '♦', '♣'][getCryptoRandom(4)];
-            f.style.color = ['var(--gold)','#fff','#ff5252'][getCryptoRandom(3)];
-            f.style.left = '50vw'; f.style.top = '50vh'; document.body.appendChild(f);
-            const a = Math.random()*Math.PI*2, d = Math.random()*600;
-            f.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(0)`,opacity:0}], 1500 + Math.random()*1000);
-            setTimeout(() => f.remove(), 2500);
+    function triggerLossAnimation() {
+        for (let i = 0; i < 20; i++) {
+            setTimeout(() => {
+                const drop = document.createElement('div');
+                drop.className = 'firework'; 
+                drop.innerText = ['♠', '♥', '♦', '♣'][Math.floor(Math.random() * 4)];
+                drop.style.cssText = `position:fixed; left:${Math.random()*100}vw; top:-50px; color:rgba(255,255,255,0.2); font-size:2.5rem; pointer-events:none; z-index:9999;`;
+                document.body.appendChild(drop);
+                drop.animate([
+                    { transform: 'translateY(0)', opacity: 0.8 },
+                    { transform: `translateY(${window.innerHeight + 50}px)`, opacity: 0 }
+                ], { duration: 3000, easing: 'linear' }).onfinish = () => drop.remove();
+            }, i * 150);
         }
     }
+
+    // function triggerFireworks(count) {
+    //     for (let i = 0; i < count; i++) {
+    //         const f = document.createElement('div'); f.className = 'firework';
+    //         f.innerText = ['♠', '♥', '♦', '♣'][getCryptoRandom(4)];
+    //         f.style.color = ['var(--gold)','#fff','#ff5252'][getCryptoRandom(3)];
+    //         f.style.left = '50vw'; f.style.top = '50vh'; document.body.appendChild(f);
+    //         const a = Math.random()*Math.PI*2, d = Math.random()*600;
+    //         f.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(0)`,opacity:0}], 1500 + Math.random()*1000);
+    //         setTimeout(() => f.remove(), 2500);
+    //     }
+    // }
 
     function toggleFullscreen() {
         if (!document.fullscreenElement) {
