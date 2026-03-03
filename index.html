@@ -310,6 +310,61 @@
                 box-sizing: border-box !important;
             }
         }
+        @media (max-width: 600px) and (orientation: portrait) {
+    #header {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important; 
+        align-items: center !important;
+        padding: 10px 15px !important; /* Standard side padding */
+        height: auto !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    #header h1 { 
+        font-size: 2.8rem !important; 
+        margin: 0 !important;
+    }
+
+    .big-stats {
+        display: flex !important;
+        flex-direction: column !important; 
+        gap: 2px !important; 
+        align-items: flex-end !important;
+        /* THIS IS THE KEY: Pushes the whole stack 30px from the right edge */
+        margin-right: 10px !important; 
+        flex: 0 0 auto;
+    }
+
+    .stat-item {
+        display: flex !important;
+        flex-direction: row !important; 
+        gap: 6px; 
+        align-items: baseline;
+        font-size: 1.1rem !important; 
+    }
+
+    .stat-label {
+        order: -1; 
+        font-size: 0.65rem !important;
+        text-transform: uppercase;
+        opacity: 0.8;
+    }
+
+    /* Adds the colons back */
+    .stat-label::after {
+        content: ":";
+    }
+
+    #deck-label-top { 
+        position: absolute !important; 
+        top: 100% !important; 
+        left: 15px !important; 
+        margin-top: -8px !important;
+    }
+}  
+
     </style>
 </head>
 <body>
@@ -362,6 +417,15 @@
         <p style="font-size: 0.75rem; text-align: center; font-style: italic; opacity: 0.8;">
             Created by Scott Swanson. Developed by Eric Swanson.<br>Tested by YOU ♥️
         </p>
+
+        <div style="text-align: center; margin-top: 10px;">
+            <button onclick="window.open('https://www.buymeacoffee.com/trece', '_blank')" 
+                    style="background: #ffffff; color: #000000; border: none; width: 100%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span style="font-size: 1.2rem;">☕</span> Support the Developer
+            </button>
+            <p style="font-size: 0.65rem; opacity: 0.7; margin-top: 5px;">Help keep Trece ad-free and updated!</p>
+        </div>
+
         <button class="btn-primary" onclick="closeRules()">Got it</button>
     </div>
 </div>
@@ -682,7 +746,6 @@
             highScore = sessionScore;
         }
             localStorage.setItem('treceHighScore', highScore);
-            document.getElementById('high-score-val').innerText = highScore;
             document.getElementById('score-val').innerText = sessionScore;
             document.getElementById('wins-val').innerText = wins; 
             document.getElementById('loss-val').innerText = losses;
