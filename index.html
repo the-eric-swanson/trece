@@ -729,17 +729,17 @@
         }
     }
 
-    // function triggerFireworks(count) {
-    //     for (let i = 0; i < count; i++) {
-    //         const f = document.createElement('div'); f.className = 'firework';
-    //         f.innerText = ['♠', '♥', '♦', '♣'][getCryptoRandom(4)];
-    //         f.style.color = ['var(--gold)','#fff','#ff5252'][getCryptoRandom(3)];
-    //         f.style.left = '50vw'; f.style.top = '50vh'; document.body.appendChild(f);
-    //         const a = Math.random()*Math.PI*2, d = Math.random()*600;
-    //         f.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(0)`,opacity:0}], 1500 + Math.random()*1000);
-    //         setTimeout(() => f.remove(), 2500);
-    //     }
-    // }
+    function triggerFireworks(count) {
+        for (let i = 0; i < count; i++) {
+            const f = document.createElement('div'); f.className = 'firework';
+            f.innerText = ['♠', '♥', '♦', '♣'][getCryptoRandom(4)];
+            f.style.color = ['var(--gold)','#fff','#ff5252'][getCryptoRandom(3)];
+            f.style.left = '50vw'; f.style.top = '50vh'; document.body.appendChild(f);
+            const a = Math.random()*Math.PI*2, d = Math.random()*600;
+            f.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(0)`,opacity:0}], 1500 + Math.random()*1000);
+            setTimeout(() => f.remove(), 2500);
+        }
+    }
 
     function toggleFullscreen() {
         if (!document.fullscreenElement) {
