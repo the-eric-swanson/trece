@@ -720,7 +720,14 @@
                 else if (isC) msg = `CLEAN SWEEP! 10 pts + ${deck.length} deck bonus = ${score} Points!`;
                 else msg = `Victory! 5 pts + ${deck.length} deck bonus = ${score} Points!`;
             } else {
-                msg = `You left ${Math.abs(score)} cards on the table. ${score} Points.`;
+                // Determine the correct singular/plural words based on the count
+                const cardCount = Math.abs(score);
+                const pointCount = Math.abs(score); // Using absolute to check the value 1
+                
+                const cardWord = cardCount === 1 ? "card" : "cards";
+                const pointWord = pointCount === 1 ? "Point" : "Points";
+                
+                msg = `You left ${cardCount} ${cardWord} on the table. ${score} ${pointWord}.`;
             }
             document.getElementById('end-message').innerText = msg;
 
