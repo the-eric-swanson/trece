@@ -315,7 +315,8 @@
         <div class="big-stats">
             <div class="stat-item"><span id="game-val">1</span><span class="stat-label">Game</span></div>
             <div class="stat-item"><span id="score-val">0</span><span class="stat-label">Score</span></div>
-            <div class="stat-item"><span><span id="wins-val">0</span>/<span id="loss-val">0</span></span><span class="stat-label">Record</span></div>
+            <div class="stat-item"><span><span id="wins-val">0</span>/<span id="loss-val">0</span></span><span class="stat-label">Win/Loss</span></div>
+            <div class="stat-item"><span id="high-score-val">0</span><span class="stat-label">Best</span></div>
         </div>
     </div>
 
@@ -342,6 +343,8 @@
 
 <div class="modal-overlay" id="rules-modal">
     <div class="modal-box" style="text-align: left;">
+        <h1 style="text-align: center;">Welcome to Trece!</h1>
+        <p style="font-size: 0.85rem;">The solitaire game taking the world by storm!</p>
         <h2 style="text-align: center;">THE HOUSE RULES</h2>
         <p style="font-size: 0.85rem;"><strong>OBJECTIVE:</strong> Clear all columns by pairing cards totaling 13. Tap cards to pair them.</p>
         <p style="font-size: 0.85rem;">- <strong>KINGS</strong>: 13 (just tap!).<br>- <strong>QUEENS</strong> (12)+ <strong>ACE</strong> (1).<br>- <strong>JACKS</strong> (11)+ 2.</p>
@@ -358,7 +361,7 @@
     <div class="modal-box">
         <h2 id="end-title" style="color:var(--gold); letter-spacing:3px;"></h2>
         <p id="end-comment" style="font-size: 1.8rem; font-style: italic; margin: 15px 0;"></p>
-        <p id="end-message" style="font-weight: bold; margin-bottom: 20px;"></p>
+        <p id="end-message" style="font-weight: bold; margin-bottom: 20px; color: var(--gold);"></p>
         <button id="modal-deal-btn" class="btn-primary" onclick="initGame()">Deal Again</button>
         <button onclick="viewBoard()" style="border:none; background:transparent; font-size:0.7rem; opacity:0.6; display:block; margin: 10px auto 0;">VIEW THE BOARD</button>
     </div>
@@ -371,10 +374,12 @@
        - Fisher-Yates Shuffle with cut
        - 1.6s Delay on Loss
     */
+
+    let wins = 0, losses = 0, gameCounter = 1;
     let lossTimer = null; // Tracks the pending "Game Over"
     let winTimer = null; // New variable to protect the victory trigger
     let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false, isLocked = false;
-    let wins = 0, losses = 0, gameCounter = 1;
+    let highScore = localStorage.getItem('treceHighScore') || 0; // Loads the high score from the user's device
 
     function getCryptoRandom(max) {
         const array = new Uint32Array(1);
@@ -389,6 +394,7 @@
         roundEnded = false; selectedCard = null;
         document.getElementById('end-modal').style.display = 'none';
         document.getElementById('rules-modal').style.display = 'none';
+        document.getElementById('high-score-val').innerText = highScore;
         deck = [];
         const suits = [{s:'♠',c:'black'},{s:'♥',c:'#d32f2f'},{s:'♦',c:'#d32f2f'},{s:'♣',c:'black'}];
         const names = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
@@ -636,6 +642,16 @@
         
         const score = isWin ? (isP ? 100 : (isC ? 10 + deck.length : 5 + deck.length)) : -document.querySelectorAll('.column .card').length;
         
+        let msg = "";
+            if (isWin) {
+                if (isP) msg = "PERFECT! You cleared the board without drawing a single card. +100 Points!";
+                else if (isC) msg = `CLEAN SWEEP! 10 pts + ${deck.length} deck bonus = ${score} Points!`;
+                else msg = `Victory! 5 pts + ${deck.length} deck bonus = ${score} Points!`;
+            } else {
+                msg = `You left ${Math.abs(score)} cards on the table. ${score} Points.`;
+            }
+            document.getElementById('end-message').innerText = msg;
+
         if (isWin) { 
             wins++; 
             if (score >= 20) triggerWinAnimation(); // Only Magnificent wins
@@ -654,13 +670,18 @@
         }
         
         sessionScore += score;
-        document.getElementById('score-val').innerText = sessionScore;
-        document.getElementById('wins-val').innerText = wins; 
-        document.getElementById('loss-val').innerText = losses;
-        document.getElementById('end-title').innerText = isP ? "PERFECT!" : (isC ? "CLEAN SWEEP!" : (isWin ? "VICTORY" : "GAME OVER"));
-        document.getElementById('end-comment').innerText = getComment(score, isWin);
-        document.getElementById('end-modal').style.display = 'flex';
-    }
+        if (sessionScore > highScore) {
+            highScore = sessionScore;
+            }
+            localStorage.setItem('treceHighScore', highScore);
+            document.getElementById('high-score-val').innerText = highScore;
+            document.getElementById('score-val').innerText = sessionScore;
+            document.getElementById('wins-val').innerText = wins; 
+            document.getElementById('loss-val').innerText = losses;
+            document.getElementById('end-title').innerText = isP ? "PERFECT!" : (isC ? "CLEAN SWEEP!" : (isWin ? "VICTORY" : "GAME OVER"));
+            document.getElementById('end-comment').innerText = getComment(score, isWin);
+            document.getElementById('end-modal').style.display = 'flex';
+        }
 
     function triggerWinAnimation() {
         const container = document.body;
@@ -756,6 +777,7 @@
     function viewBoard() { document.getElementById('end-modal').style.display = 'none'; }
 
     window.onload = initGame;
+
 </script>
 </body>
 </html>
