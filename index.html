@@ -311,59 +311,84 @@
             }
         }
         @media (max-width: 600px) and (orientation: portrait) {
-    #header {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important; 
-        align-items: center !important;
-        padding: 10px 15px !important; /* Standard side padding */
-        height: auto !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
+            #header {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important; 
+                align-items: center !important;
+                padding: 10px 15px !important; /* Standard side padding */
+                height: auto !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
 
-    #header h1 { 
-        font-size: 2.8rem !important; 
-        margin: 0 !important;
-    }
+            #header h1 { 
+                font-size: 2.8rem !important; 
+                margin: 0 !important;
+            }
 
-    .big-stats {
-        display: flex !important;
-        flex-direction: column !important; 
-        gap: 2px !important; 
-        align-items: flex-end !important;
-        /* THIS IS THE KEY: Pushes the whole stack 30px from the right edge */
-        margin-right: 10px !important; 
-        flex: 0 0 auto;
-    }
+            .big-stats {
+                display: flex !important;
+                flex-direction: column !important; 
+                gap: 2px !important; 
+                align-items: flex-end !important;
+                /* THIS IS THE KEY: Pushes the whole stack 30px from the right edge */
+                margin-right: 10px !important; 
+                flex: 0 0 auto;
+            }
 
-    .stat-item {
-        display: flex !important;
-        flex-direction: row !important; 
-        gap: 6px; 
-        align-items: baseline;
-        font-size: 1.1rem !important; 
-    }
+            .stat-item {
+                display: flex !important;
+                flex-direction: row !important; 
+                gap: 6px; 
+                align-items: baseline;
+                font-size: 1.1rem !important; 
+            }
 
-    .stat-label {
-        order: -1; 
-        font-size: 0.65rem !important;
-        text-transform: uppercase;
-        opacity: 0.8;
-    }
+            .stat-label {
+                order: -1; 
+                font-size: 0.65rem !important;
+                text-transform: uppercase;
+                opacity: 0.8;
+            }
 
-    /* Adds the colons back */
-    .stat-label::after {
-        content: ":";
-    }
+            /* Adds the colons back */
+            .stat-label::after {
+                content: ":";
+            }
 
-    #deck-label-top { 
-        position: absolute !important; 
-        top: 100% !important; 
-        left: 15px !important; 
-        margin-top: -8px !important;
-    }
-}  
+            #deck-label-top { 
+                position: absolute !important; 
+                top: 100% !important; 
+                left: 15px !important; 
+                margin-top: -8px !important;
+            }
+        }  
+
+        .break-alert {
+            color: #e57373; /* Softer coral red */
+            display: block; /* Forces it to its own line for spacing */
+            margin-top: 15px; /* Creates the gap from the score */
+            font-style: italic;
+            font-size: 1.4rem !important;
+            animation: calmPulse 2s infinite alternate;
+        }
+
+        @keyframes pulseFade {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+
+        .perfect-win-border {
+            border: 5px solid #ffdf00 !important;
+            box-shadow: 0 0 30px rgba(255, 223, 0, 0.8), inset 0 0 15px rgba(255, 223, 0, 0.4) !important;
+            animation: goldGlow 2.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes goldGlow {
+            from { border-color: #d4af37; box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); }
+            to { border-color: #ffdf00; box-shadow: 0 0 35px rgba(255, 223, 0, 0.9); }
+        }
 
     </style>
 </head>
@@ -414,8 +439,8 @@
             <span style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Your All-Time Best Score</span>
             <div id="modal-high-score" style="font-size: 2rem; color: var(--gold); font-weight: 900; text-shadow: var(--gold-glow);">0</div>
         </div>
-        <p style="font-size: 0.75rem; text-align: center; font-style: italic; opacity: 0.8;">
-            Created by Scott Swanson. Developed by Eric Swanson.<br>Tested by YOU ♥️
+        <p style="font-size: 0.85rem; text-align: center; font-style: italic; opacity: 0.8;">
+            Created by Scott Swanson. Developed by Eric Swanson.<br>Tested by YOU ♥️ <br> © 2026
         </p>
 
         <div style="text-align: center; margin-top: 10px;">
@@ -423,7 +448,7 @@
                     style="background: #ffffff; color: #000000; border: none; width: 100%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <span style="font-size: 1.2rem;">☕</span> Support the Developer
             </button>
-            <p style="font-size: 0.65rem; opacity: 0.7; margin-top: 5px;">Help keep Trece ad-free and updated!</p>
+            <p style="font-size: 0.75rem; opacity: 0.9; margin-top: 5px;">Help keep Trece ad-free and updated!</p>
         </div>
 
         <button class="btn-primary" onclick="closeRules()">Got it</button>
@@ -436,7 +461,7 @@
         <p id="end-comment" style="font-size: 1.8rem; font-style: italic; margin: 15px 0;"></p>
         <p id="end-message" style="font-weight: bold; margin-bottom: 20px; color: var(--gold);"></p>
         <button id="modal-deal-btn" class="btn-primary" onclick="initGame()">Deal Again</button>
-        <button onclick="viewBoard()" style="border:none; background:transparent; font-size:0.7rem; opacity:0.6; display:block; margin: 10px auto 0;">VIEW THE BOARD</button>
+        <button onclick="viewBoard()" style="border:none; background:transparent; font-size:0.8rem; opacity:0.8; display:block; margin: 6px auto 0;">VIEW THE BOARD</button>
     </div>
 </div>
 
@@ -479,7 +504,14 @@
         deck = [...deck.splice(cutIdx), ...deck];
         document.querySelectorAll('.column, .slot').forEach(el => el.innerHTML = '');
         updateDeckVisuals();
-        for (let i = 0; i < 7; i++) for (let j = 0; j <= i; j++) renderCard(deck.pop(), 'col-' + i, j, j < i);
+        for (let i = 0; i < 7; i++) {
+            for (let j = 0; j <= i; j++) {
+                const cardData = deck.pop();
+                if (cardData) {
+                    renderCard(cardData, 'col-' + i, j, j < i);
+                }
+            }
+        }
         reposition(); updateUI();
     }
 
@@ -495,9 +527,11 @@
     }
 
     function renderCard(data, containerId, index, isFacedown) {
+        if (!data) return; 
         const div = document.createElement('div');
         div.className = 'card' + (isFacedown ? ' facedown' : '');
-        div.dataset.v = data.v; div.style.color = data.c;
+        div.dataset.v = data.v; 
+        div.style.color = data.c;
         div.innerHTML = `<div class="rank">${data.n}</div><div class="card-center-suit">${data.s}</div>`;
         div.onclick = (e) => {
             if (roundEnded || div.classList.contains('facedown') || div.parentElement.id === 'success-slot' || div.nextElementSibling) return;
@@ -516,7 +550,8 @@
                 }
             }
         };
-        document.getElementById(containerId).appendChild(div);
+        const container = document.getElementById(containerId);
+        if (container) container.appendChild(div);
     }
 
     function fly(cards) {
@@ -707,38 +742,35 @@
     }
 
     function end(isWin) {
-        if (roundEnded) return; roundEnded = true;
-        const dc = document.getElementById('discard-slot').children.length, ac = document.getElementById('active-slot').children.length;
+        if (roundEnded) return; 
+        roundEnded = true;
+        
+        const dc = document.getElementById('discard-slot').children.length;
+        const ac = document.getElementById('active-slot').children.length;
         let isP = isWin && (deck.length === 24 && dc === 0 && ac === 0);
-        let isC = isWin && !isP && (dc === 0 && ac === 0);
+        let isC = isWin && !isP && (dc === 0 && ac === 0 && deck.length > 0);
         
         const score = isWin ? (isP ? 100 : (isC ? 10 + deck.length : 5 + deck.length)) : -document.querySelectorAll('.column .card').length;
         
         let msg = "";
-            if (isWin) {
-                if (isP) msg = "PERFECT! You cleared the board without drawing a single card. +100 Points!";
-                else if (isC) msg = `CLEAN SWEEP! 10 pts + ${deck.length} deck bonus = ${score} Points!`;
-                else msg = `Victory! 5 pts + ${deck.length} deck bonus = ${score} Points!`;
-            } else {
-                // Determine the correct singular/plural words based on the count
-                const cardCount = Math.abs(score);
-                const pointCount = Math.abs(score); // Using absolute to check the value 1
-                
-                const cardWord = cardCount === 1 ? "card" : "cards";
-                const pointWord = pointCount === 1 ? "Point" : "Points";
-                
-                msg = `You left ${cardCount} ${cardWord} on the table. ${score} ${pointWord}.`;
-            }
-            document.getElementById('end-message').innerText = msg;
+        if (isWin) {
+            if (isP) msg = "PERFECT! You cleared the board without drawing a single card. +100 Points!";
+            else if (isC) msg = `CLEAN SWEEP! 10 pts + ${deck.length} deck bonus = ${score} Points!`;
+            else msg = `Victory! 5 pts + ${deck.length} deck bonus = ${score} Points!`;
+        } else {
+            const cardCount = Math.abs(score);
+            const cardWord = cardCount === 1 ? "card" : "cards";
+            const pointWord = cardCount === 1 ? "Point" : "Points";
+            msg = `You left ${cardCount} ${cardWord} on the table. ${score} ${pointWord}.`;
+        }
 
         if (isWin) { 
             wins++; 
-            if (score >= 20) triggerWinAnimation(); // Only Magnificent wins
+            if (score >= 20) triggerWinAnimation();
             triggerFireworks(isP ? 120 : 60); 
         } else { 
             losses++; 
-            if (score <= -10) triggerLossAnimation(); // Bummer Rain
-            // Reveal loss cards with high visibility
+            if (score <= -10) triggerLossAnimation();
             document.querySelectorAll('.facedown').forEach((c, idx) => {
                 setTimeout(() => {
                     c.classList.remove('facedown');
@@ -751,15 +783,141 @@
         sessionScore += score;
         if (sessionScore > highScore) {
             highScore = sessionScore;
-        }
             localStorage.setItem('treceHighScore', highScore);
-            document.getElementById('score-val').innerText = sessionScore;
-            document.getElementById('wins-val').innerText = wins; 
-            document.getElementById('loss-val').innerText = losses;
-            document.getElementById('end-title').innerText = isP ? "PERFECT!" : (isC ? "CLEAN SWEEP!" : (isWin ? "VICTORY" : "GAME OVER"));
-            document.getElementById('end-comment').innerText = getComment(score, isWin);
-            document.getElementById('end-modal').style.display = 'flex';
+        }
+
+       // --- TIERED MENTAL HEALTH BREAK LOGIC ---
+        let cooldown = 0;
+        let breakMessage = "";
+        let coffeeButtonHTML = ""; // Defined separately for placement control
         
+        // Create the support button with the white background and exact same size as other buttons
+        const supportButton = `
+                <button onclick="window.open('https://www.buymeacoffee.com/trece', '_blank')" 
+                style="background: rgba(255, 255, 255, 0.85);
+                        color: #1a1a1a; /* Dark charcoal for high contrast */
+                        border: 1px solid rgba(0,0,0,0.1); /* Subtle edge definition */
+                        width: 100%;
+                        margin: 50px auto 0 auto;
+                        font-size: 0.8rem;
+                        border-radius: 6px; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        gap: 8px; 
+                        height: 38px; 
+                        font-family: sans-serif; 
+                        font-weight: bold;
+                        cursor: pointer;">
+                    <span style="font-size: 1.1rem;">☕</span> ENJOYING TRECE? SUPPORT US!
+                </button>`;
+
+        if (gameCounter >= 50 && gameCounter % 25 === 0) {
+            cooldown = gameCounter;
+            breakMessage = `<span class='break-alert'>${gameCounter} games? Time to go outside!</span>`;
+            coffeeButtonHTML = supportButton; // Add button for 50+ games
+        } else if (gameCounter === 30) {
+            cooldown = 30;
+            breakMessage = `<span class='break-alert'>30 Games: Mandatory 30 second break</span>`;
+            coffeeButtonHTML = supportButton; // Add button for 30 games
+        } else if (gameCounter === 20) {
+            cooldown = 15;
+            breakMessage = "<span class='break-alert' style='color: #ffaa00;'>20 Games: Take a breather</span>";
+        } else if (gameCounter === 10) {
+            cooldown = 5;
+            breakMessage = "<span class='break-alert' style='color: var(--gold);'>10 Games: Quick stretch</span>";
+        } else if (gameCounter === 5) {
+            breakMessage = "<span class='break-alert' style='color: var(--gold); opacity: 0.8;'>5 games: Ready for a break?</span>";
+        }
+
+        // --- UI UPDATE & MODAL DISPLAY ---
+        document.getElementById('score-val').innerText = sessionScore;
+        document.getElementById('wins-val').innerText = wins; 
+        document.getElementById('loss-val').innerText = losses;
+        document.getElementById('end-title').innerText = isP ? "PERFECT!" : (isC ? "CLEAN SWEEP!" : (isWin ? "VICTORY" : "GAME OVER"));
+        document.getElementById('end-comment').innerText = getComment(score, isWin);
+        
+        // Set the main text content
+        document.getElementById('end-message').innerHTML = `${msg}${breakMessage ? `<br>${breakMessage}` : ""}`;
+
+        // IMPORTANT: Clear any previous coffee button and re-insert at the bottom if needed
+        // We append the button after the primary action button
+        const modalBox = document.querySelector('#end-modal .modal-box');
+        modalBox.classList.remove('perfect-win-border');
+
+        if (isP) {
+            modalBox.classList.add('perfect-win-border');
+            // 1. Set the text content first
+        document.getElementById('end-message').innerHTML = `${msg}${breakMessage ? `<br>${breakMessage}` : ""}`;
+
+        // 2. Identify the modal box
+        const modalBox = document.querySelector('#end-modal .modal-box');
+        modalBox.classList.remove('perfect-win-border');
+
+        if (isP) {
+            modalBox.classList.add('perfect-win-border');
+            document.getElementById('end-title').style.color = "#ffdf00";
+            document.getElementById('end-title').style.textShadow = "0 0 10px rgba(255, 223, 0, 0.8)";
+        } else {
+            document.getElementById('end-title').style.color = "var(--gold)";
+            document.getElementById('end-title').style.textShadow = "none";
+        }
+
+        // 3. Re-insert the support button at the very bottom
+        const oldBtn = modalBox.querySelector('.support-btn-container');
+        if (oldBtn) oldBtn.remove();
+
+        if (coffeeButtonHTML) {
+            const btnContainer = document.createElement('div');
+            btnContainer.className = 'support-btn-container';
+            btnContainer.style.marginTop = "30px"; // Adds space from "View Board"
+            btnContainer.innerHTML = coffeeButtonHTML;
+            modalBox.appendChild(btnContainer);
+        }
+        } else {
+            // Reset title color for normal games
+            document.getElementById('end-title').style.color = "var(--gold)";
+        }
+        
+        // Remove old support button if it exists to avoid duplicates
+        const oldBtn = modalBox.querySelector('.support-btn-container');
+        if (oldBtn) oldBtn.remove();
+
+        if (coffeeButtonHTML) {
+            const btnContainer = document.createElement('div');
+            btnContainer.className = 'support-btn-container';
+            btnContainer.innerHTML = coffeeButtonHTML;
+            modalBox.appendChild(btnContainer); // Places it at the very bottom
+        }
+
+        document.getElementById('end-modal').style.display = 'flex';
+
+        if (cooldown > 0) {
+        isLocked = true;
+        const mBtn = document.getElementById('modal-deal-btn');
+        const bBtn = document.getElementById('board-deal-btn');
+        
+        // Disable both buttons immediately
+        mBtn.disabled = bBtn.disabled = true;
+        
+        let rem = cooldown;
+        // Set initial text for both
+        mBtn.innerText = bBtn.innerText = `WAIT (${rem}S)`;
+        
+        const timer = setInterval(() => { 
+            rem--;
+            // Update both buttons every second
+            mBtn.innerText = bBtn.innerText = `WAIT (${rem}S)`; 
+            
+            if (rem <= 0) { 
+                clearInterval(timer); 
+                isLocked = false; 
+                mBtn.disabled = bBtn.disabled = false; 
+                // Restore original labels
+                mBtn.innerText = bBtn.innerText = "DEAL AGAIN"; 
+            } 
+        }, 1000);
+        }
     }
 
     function triggerWinAnimation() {
