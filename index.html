@@ -439,25 +439,74 @@
         }
 
         .shake-it {
-            animation: frustration-shake 1.0s ease-in-out;
+            animation: frustration-shake 1.5s ease-in-out;
             /* Hardware acceleration for smooth mobile performance */
             will-change: transform; 
+        }
+
+        .overlay-base {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: radial-gradient(circle, #1a472a 0%, #072a16 100%);
+            z-index: 10000; /* Higher than everything else */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .landing-content {
+            text-align: center;
+            color: #d4af37; /* Gold */
+            max-width: 500px;
+            padding: 2rem;
+        }
+
+        .hero-img {
+            width: 80%;
+            height: auto;
+            max-width: 500px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin: 20px 0;
+        }
+
+        #start-game-btn {
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            background: #d4af37;
+            color: #072a16;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
         }
 
     </style>
 </head>
 <body>
 
-<div id="scaler">
-    <div id="header">
-        <h1>TRECE</h1>
-        <div id="deck-label-top">DECK: <span id="deck-count">24</span></div>
-        <div class="big-stats">
-            <div class="stat-item"><span id="game-val">1</span><span class="stat-label">Game</span></div>
-            <div class="stat-item"><span id="score-val">0</span><span class="stat-label">Score</span></div>
-            <div class="stat-item"><span><span id="wins-val">0</span>/<span id="loss-val">0</span></span><span class="stat-label">Win/Loss</span></div>
+    <div id="landing-page" class="overlay-base">
+        <div class="landing-content">
+            <h1 class="landing-title">Welcome to TRECE</h1>
+            <img src="trece-cover.jpg" alt="Trece Cards" class="hero-img">
+            <p class="landing-tagline">Where 13 is your lucky number.</p>
+            <button id="start-game-btn" onclick="closeLanding()">DEAL HAND</button>
         </div>
     </div>
+
+    <div id="scaler">
+        <div id="header">
+            <h1>TRECE</h1>
+            <div id="deck-label-top">DECK: <span id="deck-count">24</span></div>
+            <div class="big-stats">
+                <div class="stat-item"><span id="game-val">1</span><span class="stat-label">Game</span></div>
+                <div class="stat-item"><span id="score-val">0</span><span class="stat-label">Score</span></div>
+                <div class="stat-item"><span><span id="wins-val">0</span>/<span id="loss-val">0</span></span><span class="stat-label">Win/Loss</span></div>
+            </div>
+        </div>
 
     <div id="top-bar">
         <div id="deck-slot" onclick="drawCard()"></div>
@@ -539,25 +588,52 @@
         return array[0] % max;
     }
 
-    function initGame() {
+    function closeLanding() {
+        const landing = document.getElementById('landing-page');
+        landing.style.opacity = '0';
+        
+        setTimeout(() => {
+            landing.style.display = 'none';
+            // Optional: Start the game immediately
+            if (typeof deal === 'function') deal();
+        }, 500);
+    }
+
+   function initGame() {
         if (winTimer) { clearTimeout(winTimer); winTimer = null; }
         if (isLocked) return;
         if (roundEnded) { gameCounter++; document.getElementById('game-val').innerText = gameCounter; }
         roundEnded = false; selectedCard = null;
         document.getElementById('end-modal').style.display = 'none';
         document.getElementById('rules-modal').style.display = 'none';
+        
         deck = [];
         const suits = [{s:'♠',c:'black'},{s:'♥',c:'#d32f2f'},{s:'♦',c:'#d32f2f'},{s:'♣',c:'black'}];
         const names = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        
+        // 1. Create the sorted deck
         suits.forEach(suit => names.forEach((name, i) => deck.push({n:name, v:i+1, s:suit.s, c:suit.c})));
-        for (let i = deck.length - 1; i > 0; i--) {
-            const j = getCryptoRandom(i + 1);
-            [deck[i], deck[j]] = [deck[j], deck[i]];
+
+        // 2. THE VEGAS DOUBLE-SHUFFLE
+        // We run the Fisher-Yates twice to ensure neighbors are fully separated
+        for (let pass = 0; pass < 2; pass++) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = getCryptoRandom(i + 1);
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
         }
-        const cutIdx = getCryptoRandom(15) + 18;
-        deck = [...deck.splice(cutIdx), ...deck];
+
+        // 3. THE TRIPLE CUT
+        // We do 3 small cuts to randomize the "top" of the deck more effectively
+        for (let i = 0; i < 3; i++) {
+            const cutIdx = getCryptoRandom(20) + 15; 
+            deck = [...deck.splice(cutIdx), ...deck];
+        }
+
+        // 4. Clean the board and Render
         document.querySelectorAll('.column, .slot').forEach(el => el.innerHTML = '');
         updateDeckVisuals();
+        
         for (let i = 0; i < 7; i++) {
             for (let j = 0; j <= i; j++) {
                 const cardData = deck.pop();
@@ -855,14 +931,15 @@
             losses++; 
             if (score > -2) {
                 document.body.classList.add('shake-it');
-                setTimeout(() => document.body.classList.remove('shake-it'), 1050);
+                setTimeout(() => document.body.classList.remove('shake-it'), 1550);
                 }
             else if (score > -10) {
                triggerLossAnimation(20);
             } 
             else {
-                triggerLossAnimation(60);
+                triggerLossAnimation(80);
                 triggerLightning();
+                setTimeout(triggerLightning, 1200);
             }
 
             reposition(true);
@@ -1130,13 +1207,21 @@
 
     function triggerLightning() {
         const flash = document.createElement('div');
-        flash.style.cssText = `position:fixed; top:0; left:0; width:100vw; height:100vh; background:white; opacity:0; z-index:9998; pointer-events:none;`;
-        document.body.appendChild(flash);
+        // Ensure it sits behind the rain but in front of the board
+        flash.style.cssText = `position:fixed; top:0; left:0; width:100vw; height:100vh; background:#fffdf5; opacity:0; z-index:9998; pointer-events:none;`;        document.body.appendChild(flash);
 
-        // Two quick flashes
+        // Multi-strike pattern: Strike 1 (Fast), Gap, Strike 2 (Stronger)
         flash.animate([
-            { opacity: 0 }, { opacity: 0.4 }, { opacity: 0 }, { opacity: 0.6 }, { opacity: 0 }
-        ], { duration: 400, easing: 'ease-out' }).onfinish = () => flash.remove();
+            { opacity: 0, offset: 0 },
+            { opacity: 0.5, offset: 0.1 },  // First quick burst
+            { opacity: 0, offset: 0.2 },    // Back to dark
+            { opacity: 0, offset: 0.3 },    // Pause...
+            { opacity: 0.8, offset: 0.4 },  // Big main strike
+            { opacity: 0, offset: 1.0 }     // Fade out slowly
+        ], { 
+            duration: 600, 
+            easing: 'ease-out' 
+        }).onfinish = () => flash.remove();
     }
 
     function triggerFireworks(count) {
