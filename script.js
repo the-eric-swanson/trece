@@ -692,17 +692,30 @@
     function viewBoard() { document.getElementById('end-modal').style.display = 'none'; }
 
     function toggleTheme() {
-        document.body.classList.toggle('midnight-mode');
+        const body = document.body;
+        const icon = document.getElementById('theme-icon');
         
-        // Save the choice so it persists across refreshes
-        const isMidnight = document.body.classList.contains('midnight-mode');
-        localStorage.setItem('treceTheme', isMidnight ? 'midnight' : 'classic');
+        // 1. Toggle the class
+        body.classList.toggle('midnight-mode');
+        
+        // 2. Update the Icon and Save Preference
+        if (body.classList.contains('midnight-mode')) {
+            icon.innerText = "☀️"; // Show sun for "Back to Light"
+            localStorage.setItem('treceTheme', 'midnight');
+        } else {
+            icon.innerText = "🌙"; // Show moon for "Go Dark"
+            localStorage.setItem('treceTheme', 'classic');
+        }
     }
-
-// Add this to your window.onload or initGame to load the saved theme
-
 
     window.onload = initGame;
     if (localStorage.getItem('treceTheme') === 'midnight') {
     document.body.classList.add('midnight-mode');
+    }
+    // Check for saved theme on startup
+    const savedTheme = localStorage.getItem('treceTheme');
+    if (savedTheme === 'midnight') {
+        document.body.classList.add('midnight-mode');
+        const icon = document.getElementById('theme-icon');
+        if (icon) icon.innerText = "☀️";
     }
