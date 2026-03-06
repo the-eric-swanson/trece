@@ -1,9 +1,19 @@
- :root { 
-            --felt: radial-gradient(circle at center, #0a2f0a 0%, #051a05 100%);
-            --gold: #d4af37;
-            --gold-glow: 0 0 15px rgba(212, 175, 55, 0.9);
-            --card-w: 12.8%; 
-        }
+    :root { 
+        /* Classic Green Variables */
+        --felt: radial-gradient(circle at center, #0a2f0a 0%, #051a05 100%);
+        --gold: #d4af37;
+        --gold-glow: 0 0 15px rgba(212, 175, 55, 0.9);
+        --card-back: #0d1a33;
+        --card-w: 12.8%; 
+    }
+
+    /* Midnight Theme Overrides */
+    body.midnight-mode {
+        --felt: radial-gradient(circle at center, #0d1117 0%, #010409 100%); /* Deep Navy/Black */
+        --gold: #8b949e; /* Sleek Silver */
+        --gold-glow: 0 0 15px rgba(139, 148, 158, 0.6);
+        --card-back: #161b22;
+    }
         
         html, body { 
             height: 100dvh; width: 100%; margin: 0; padding: 0; 
@@ -65,7 +75,7 @@
         .card-center-suit { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); font-size: clamp(2rem, 9vw, 4rem); }
 
         .card.facedown { 
-            background: #0d1a33 !important; border: 3px solid white;
+            background: var(--card-back) !important;; border: 3px solid white;
             background-image: linear-gradient(30deg, #1a2a4d 12%, transparent 12.5%, transparent 87%, #1a2a4d 87.5%, #1a2a4d),
                               linear-gradient(150deg, #1a2a4d 12%, transparent 12.5%, transparent 87%, #1a2a4d 87.5%, #1a2a4d),
                               linear-gradient(60deg, #253a63 25%, transparent 25.5%, transparent 75%, #253a63 75%, #253a63) !important;

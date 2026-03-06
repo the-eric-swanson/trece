@@ -17,20 +17,23 @@
         return array[0] % max;
     }
 
-    function closeLanding() {
+   function closeLanding() {
         const landing = document.getElementById('landing-page');
-        const gameBoard = document.getElementById('scaler');
+        const scaler = document.getElementById('scaler');
         
-        // 1. Lift the curtain
+        // 1. DEAL FIRST (While the landing page is still 100% opaque)
+        if (typeof initGame === 'function') {
+            initGame(); 
+        }
+        
+        // 2. LIFT THE CURTAIN SECOND
+        // Now that the cards are already in place, we just fade the blur
         landing.style.transform = "translateY(-110%)";
         landing.style.opacity = "0";
-        
-        // 2. Bring the board into focus
-        gameBoard.classList.add('active');
+        scaler.classList.add('active'); // Removes the blur
         
         setTimeout(() => {
             landing.style.display = 'none';
-            if (typeof initGame === 'function') initGame();
         }, 800);
     }
 
@@ -688,4 +691,18 @@
     function closeRules() { document.getElementById('rules-modal').style.display = 'none'; }
     function viewBoard() { document.getElementById('end-modal').style.display = 'none'; }
 
+    function toggleTheme() {
+        document.body.classList.toggle('midnight-mode');
+        
+        // Save the choice so it persists across refreshes
+        const isMidnight = document.body.classList.contains('midnight-mode');
+        localStorage.setItem('treceTheme', isMidnight ? 'midnight' : 'classic');
+    }
+
+// Add this to your window.onload or initGame to load the saved theme
+
+
     window.onload = initGame;
+    if (localStorage.getItem('treceTheme') === 'midnight') {
+    document.body.classList.add('midnight-mode');
+    }
