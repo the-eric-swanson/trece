@@ -484,17 +484,128 @@
             box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
         }
 
+        @media (max-height: 500px) and (orientation: landscape) {
+            .landing-content {
+                display: flex;
+                flex-direction: row; /* Side-by-side split */
+                align-items: center;
+                justify-content: space-evenly;
+                width: 95vw;
+                max-width: none;
+                padding: 10px;
+            }
+
+            /* Wrap the Title, Art, and Tagline in their own vertical column */
+            .art-stack {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                max-width: 50%;
+            }
+
+            .landing-title { font-size: 1.4rem !important; margin: 0; }
+            
+            .hero-img { 
+                max-width: 180px; /* Scaled down for landscape height */
+                margin: 5px 0; 
+            }
+
+            .landing-tagline { 
+                font-size: 0.75rem; 
+                margin: 0; 
+                line-height: 1.2;
+            }
+
+            #start-game-btn {
+                padding: 15px 30px;
+                font-size: 1.2rem;
+                margin-left: 20px;
+                white-space: nowrap; /* Prevents the button text from wrapping */
+            }
+        }
+
+        /* The entire center stack floats gently */
+        .art-stack {
+            animation: floating 4s infinite alternate ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-15px); }
+        }
+
+        /* The Trece Logo gets a golden glow pulse */
+        .hero-img {
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.3));
+            transition: filter 0.5s ease, transform 0.3s ease;
+        }
+
+        .hero-img:hover {
+            filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.8));
+            transform: scale(1.02);
+        }
+
+        /* The Deal Button "Heartbeat" */
+        #start-game-btn {
+            animation: button-pulse 2s infinite;
+            transition: all 0.3s ease;
+        }
+
+        @keyframes button-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 20px 10px rgba(212, 175, 55, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+
+        /* Apply this to your main game container initially */
+        #scaler {
+            filter: blur(8px) brightness(0.7);
+            transition: filter 0.8s ease, opacity 0.8s ease;
+            pointer-events: none; /* Prevents clicking cards through the landing page */
+        }
+
+        /* This class will be removed when the game starts */
+        #scaler.active {
+            filter: blur(0px) brightness(1);
+            pointer-events: auto;
+        }
+
+        @keyframes slide-in-right {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes scale-in {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .art-stack {
+            animation: scale-in 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, 
+                    floating 4s infinite 1s alternate ease-in-out;
+        }
+
+        #start-game-btn {
+            animation: slide-in-right 0.8s 0.5s both, 
+                    button-pulse 2s infinite 1.3s;
+        }
+
     </style>
 </head>
 <body>
 
     <div id="landing-page" class="overlay-base">
-        <div class="landing-content">
+    <div class="landing-content">
+        <div class="art-stack">
             <h1 class="landing-title">Welcome to TRECE</h1>
             <img src="trece-cover.jpg" alt="Trece Cards" class="hero-img">
             <p class="landing-tagline">Where 13 is your lucky number.</p>
-            <button id="start-game-btn" onclick="closeLanding()">DEAL HAND</button>
         </div>
+            <button id="start-game-btn" onclick="closeLanding()">DEAL HAND</button>
+         </div>
     </div>
 
     <div id="scaler">
@@ -590,13 +701,19 @@
 
     function closeLanding() {
         const landing = document.getElementById('landing-page');
-        landing.style.opacity = '0';
+        const gameBoard = document.getElementById('scaler');
+        
+        // 1. Lift the curtain
+        landing.style.transform = "translateY(-110%)";
+        landing.style.opacity = "0";
+        
+        // 2. Bring the board into focus
+        gameBoard.classList.add('active');
         
         setTimeout(() => {
             landing.style.display = 'none';
-            // Optional: Start the game immediately
-            if (typeof deal === 'function') deal();
-        }, 500);
+            if (typeof initGame === 'function') initGame();
+        }, 800);
     }
 
    function initGame() {
