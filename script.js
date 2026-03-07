@@ -10,6 +10,7 @@
     let winTimer = null; // New variable to protect the victory trigger
     let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false, isLocked = false;
     let highScore = localStorage.getItem('treceHighScore') || 0; // Loads the high score from the user's device
+    const zAnim = getComputedStyle(document.documentElement).getPropertyValue('--z-animations').trim() || '12000';
 
     function getCryptoRandom(max) {
         const array = new Uint32Array(1);
@@ -50,8 +51,8 @@
         const names = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
         
         // 1. Create the sorted deck
-        suits.forEach(suit => names.forEach((name, i) => deck.push({n:name, v:i+1, s:suit.s, c:suit.c})));
-
+        suits.forEach(suit => names.forEach((name, i) => deck.push({n:name, v:i+1, s:suit.s})));
+        
         // 2. THE VEGAS DOUBLE-SHUFFLE
         // We run the Fisher-Yates twice to ensure neighbors are fully separated
         for (let pass = 0; pass < 2; pass++) {
@@ -101,8 +102,8 @@
         if (!data) return; 
         const div = document.createElement('div');
         div.className = 'card' + (isFacedown ? ' facedown' : '');
+        div.dataset.suit = data.s;
         div.dataset.v = data.v; 
-        div.style.color = data.c;
         div.innerHTML = `<div class="rank">${data.n}</div><div class="card-center-suit">${data.s}</div>`;
         div.onclick = (e) => {
             if (roundEnded || div.classList.contains('facedown') || div.parentElement.id === 'success-slot' || div.nextElementSibling) return;
@@ -130,20 +131,20 @@
         const sRect = success.getBoundingClientRect();
         cards.forEach((el, i) => {
             const eRect = el.getBoundingClientRect();
-            el.classList.add('flying', 'in-transit');
+            
+            // Use the new class to trigger the smooth transition
+            el.classList.add('flying', 'in-transit'); 
+            
             el.style.transform = `translate(${sRect.left - eRect.left}px, ${sRect.top - eRect.top}px) scale(1.1)`;
+            
             setTimeout(() => {
-                el.classList.remove('flying', 'selected');
-                el.style.transform = 'none'; el.style.top = '0px';
-                el.style.zIndex = success.children.length + 100;
+                el.classList.remove('flying', 'selected', 'in-transit');
+                el.style.transform = 'none'; 
+                el.style.top = '0px';
+                el.style.zIndex = success.children.length + 10;
                 success.appendChild(el);
-
-                // Hand off the logic to the centralized check()
-                if(i === cards.length-1) { 
-                    reposition(); 
-                    reveal(); 
-                }
-            }, 300);
+                if(i === cards.length-1) { reposition(); reveal(); }
+            }, 400); // Matches the 0.6s in CSS
         });
     }
 
@@ -160,8 +161,17 @@
         if (active.children.length > 0) {
             const old = active.children[0];
             old.style.zIndex = "100";
+            // Ensure the slide is smooth
+            old.style.transition = "transform 0.15s ease-out"; 
             old.style.transform = `translateX(${active.offsetWidth * 1.2}px)`;
-            setTimeout(() => { old.style.transform = "none"; old.style.zIndex = ""; discard.appendChild(old); reposition(); }, 150);
+            
+            setTimeout(() => { 
+                old.style.transition = ""; // Reset
+                old.style.transform = "none"; 
+                old.style.zIndex = ""; 
+                discard.appendChild(old); 
+                reposition(); 
+            }, 150);
         }
         if(ds.children.length > 0) {
             const dsRect = ds.getBoundingClientRect(), acRect = active.getBoundingClientRect();
@@ -185,30 +195,28 @@
         let flippedCount = 0;
         const columns = document.querySelectorAll('.column');
         
-        // 1. Immediate Win Check (Board is empty)
-        const boardCards = document.querySelectorAll('.column .card').length;
-        if (boardCards === 0) { check(); return; }
-
         columns.forEach(col => {
-            if (col.children.length > 0) {
-                const last = col.lastElementChild;
-                // 2. Identify cards that NEED to flip
-                if (last.classList.contains('facedown')) {
-                    flippedCount++;
-                    last.style.transform = "rotateY(90deg)";
-                    setTimeout(() => { 
-                        last.classList.remove('facedown'); 
-                        last.style.transform = "rotateY(0deg)";
-                        
+            const last = col.lastElementChild;
+            if (last && last.classList.contains('facedown')) {
+                flippedCount++;
+                last.classList.add('flipping');
+                last.style.transform = "rotateY(90deg)";
+                
+                setTimeout(() => { 
+                    last.classList.remove('facedown'); 
+                    last.style.transform = "rotateY(0deg)";
+                    
+                    setTimeout(() => {
+                        last.classList.remove('flipping');
                         flippedCount--;
-                        // 3. THE FIX: Only rebuild the masterPool AFTER the last flip
+                        // CRITICAL: This ensures win-check runs after the last card flips
                         if (flippedCount === 0) check(); 
-                    }, 150); // Increased to 150ms to ensure DOM stability
-                }
+                    }, 150);
+                }, 150);
             }
         });
 
-        // 4. Fallback: If no cards needed to flip, check the board state anyway
+        // If no cards need flipping, we still need to check for the win
         if (flippedCount === 0) check();
     }
 
@@ -531,99 +539,118 @@
     }
 
     function triggerVortex() {
+        const style = getComputedStyle(document.documentElement);
+        const redSuit = style.getPropertyValue('--suit-red').trim();
+        const blackSuit = style.getPropertyValue('--suit-black').trim();
+        const animZ = style.getPropertyValue('--z-animations').trim() || '12000';
+        const cardW = style.getPropertyValue('--card-w').trim();
+        const cardH = style.getPropertyValue('--card-h').trim();
+        
         const suits = ['♠', '♥', '♦', '♣'];
-        const colors = ['black', '#d32f2f', '#d32f2f', 'black'];
-        const count = 25;
+        const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        const fullDeck = [];
+        suits.forEach(s => ranks.forEach(r => fullDeck.push({s, r})));
+        fullDeck.sort(() => Math.random() - 0.5);
 
-        for (let i = 0; i < count; i++) {
+        fullDeck.forEach((data, i) => {
             setTimeout(() => {
                 const card = document.createElement('div');
-                const sIdx = Math.floor(Math.random() * 4);
-                card.className = 'vortex-card';
-                card.style.color = colors[sIdx];
-                card.innerHTML = suits[sIdx];
+                card.className = 'card vortex-card';
+                card.style.position = 'fixed';
+                card.style.zIndex = animZ;
+                card.style.width = cardW;
+                card.style.height = cardH;
+                
+                const isRed = data.s === '♥' || data.s === '♦';
+                card.style.color = isRed ? redSuit : blackSuit;
+                card.dataset.suit = data.s;
+                
+                card.innerHTML = `<div class="rank">${data.r}</div><div class="card-center-suit">${data.s}</div>`;
                 card.style.left = '50vw';
                 card.style.top = '50vh';
+                card.style.marginLeft = `calc(${cardW} / -2)`;
+                card.style.marginTop = `calc(${cardH} / -2)`;
+                
                 document.body.appendChild(card);
 
-                let angle = 0;
-                let radius = 0;
-                // SLOWED DOWN: Lower speed and growth values
-                const speed = 0.04 + Math.random() * 0.03; // Was 0.1 - 0.3
-                const growth = 1.2 + Math.random() * 1.8; // Was 2 - 7
+                let angle = 0, radius = 0;
+                const speed = 0.03 + Math.random() * 0.05;
+                const growth = 2 + Math.random() * 3; // Wider spiral for 52 cards
                 const startAngle = Math.random() * Math.PI * 2;
 
                 const anim = setInterval(() => {
                     angle += speed;
                     radius += growth;
-                    
                     const x = Math.cos(angle + startAngle) * radius;
                     const y = Math.sin(angle + startAngle) * radius;
-                    const rotation = angle * 40; // Slightly slower card spinning
-
-                    card.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg)`;
-                    
-                    // Opacity fades out slower as well
-                    card.style.opacity = 1 - (radius / 700);
-
-                    if (radius > 700) {
-                        clearInterval(anim);
-                        card.remove();
-                    }
+                    card.style.transform = `translate(${x}px, ${y}px) rotate(${angle * 60}deg)`;
+                    card.style.opacity = 1 - (radius / 900);
+                    if (radius > 900) { clearInterval(anim); card.remove(); }
                 }, 20);
-            }, i * 120); // Staggered slightly more (was 80ms)
-        }
+            }, i * 60); // Snappy delivery
+        });
     }
 
     function triggerWinAnimation() {
-        const container = document.body;
-        const cardCount = 40; // Number of cards in the waterfall
+        const style = getComputedStyle(document.documentElement);
+        const redSuit = style.getPropertyValue('--suit-red').trim();
+        const blackSuit = style.getPropertyValue('--suit-black').trim();
+        const animZ = style.getPropertyValue('--z-animations').trim() || '12000';
+        const cardW = style.getPropertyValue('--card-w').trim();
+        const cardH = style.getPropertyValue('--card-h').trim();
+        
         const suits = ['♠', '♥', '♦', '♣'];
-        const colors = ['black', '#d32f2f', '#d32f2f', 'black'];
+        const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        const fullDeck = [];
+        
+        // 1. Generate the full 52
+        suits.forEach(s => ranks.forEach(r => fullDeck.push({s, r})));
+        
+        // 2. Shuffle so the waterfall isn't sorted by suit
+        fullDeck.sort(() => Math.random() - 0.5);
 
-        for (let i = 0; i < cardCount; i++) {
+        fullDeck.forEach((data, i) => {
             setTimeout(() => {
                 const card = document.createElement('div');
-                const suitIdx = Math.floor(Math.random() * 4);
                 card.className = 'card';
                 card.style.position = 'fixed';
-                card.style.zIndex = '5000';
-                card.style.width = '80px';
-                card.style.height = '112px';
-                card.style.left = Math.random() * 100 + 'vw';
-                card.style.top = '-120px';
-                card.style.color = colors[suitIdx];
-                card.innerHTML = `<div class="rank">${['A','J','Q','K'][Math.floor(Math.random()*4)]}</div>
-                                <div class="card-center-suit">${suits[suitIdx]}</div>`;
+                card.style.zIndex = animZ;
+                card.style.width = cardW;
+                card.style.height = cardH;
                 
-                container.appendChild(card);
+                // Apply theme-aware colors
+                const isRed = data.s === '♥' || data.s === '♦';
+                card.style.color = isRed ? redSuit : blackSuit;
+                card.dataset.suit = data.s;
 
-                let velocityY = 0;
-                let posX = parseFloat(card.style.left);
-                let posY = -120;
-                const gravity = 0.5;
-                const bounce = -0.7;
+                card.innerHTML = `<div class="rank">${data.r}</div><div class="card-center-suit">${data.s}</div>`;
+                card.style.left = Math.random() * 90 + 'vw'; // Keep slightly away from edges
+                card.style.top = '-150px';
+                document.body.appendChild(card);
+
+                // Gravity Logic
+                let velocityY = 0, posY = -150;
+                const gravity = 0.6, bounce = -0.5, cH = parseFloat(cardH) || 128;
 
                 const anim = setInterval(() => {
                     velocityY += gravity;
                     posY += velocityY;
-
-                    // Bounce off the bottom
-                    if (posY + 112 > window.innerHeight) {
-                        posY = window.innerHeight - 112;
+                    if (posY + cH > window.innerHeight) {
+                        posY = window.innerHeight - cH;
                         velocityY *= bounce;
                     }
-
                     card.style.top = posY + 'px';
-
-                    // Remove card after it stops bouncing or falls off
-                    if (posY > window.innerHeight + 200 || Math.abs(velocityY) < 0.1 && posY > window.innerHeight - 120) {
+                    if (Math.abs(velocityY) < 0.3 && posY > window.innerHeight - (cH + 10)) {
                         clearInterval(anim);
-                        card.remove();
+                        setTimeout(() => {
+                            card.style.transition = "opacity 1.5s ease";
+                            card.style.opacity = "0";
+                            setTimeout(() => card.remove(), 1500);
+                        }, 1000);
                     }
                 }, 20);
-            }, i * 150); // Stagger the cards
-        }
+            }, i * 80); // Faster stagger for 52 cards
+        });
     }
 
     function triggerLossAnimation(count = 20) {
@@ -632,7 +659,7 @@
                 const drop = document.createElement('div');
                 drop.className = 'firework'; 
                 drop.innerText = ['♠', '♥', '♦', '♣'][Math.floor(Math.random() * 4)];
-                drop.style.cssText = `position:fixed; left:${Math.random()*100}vw; top:-50px; color:rgba(255,255,255,0.6); font-size:2.5rem; pointer-events:none; z-index:9999;`;
+                drop.style.cssText = `position:fixed; left:${Math.random()*100}vw; top:-50px; color:rgba(255,255,255,0.6); font-size:2.5rem; pointer-events:none; z-index:${zAnim};`;
                 document.body.appendChild(drop);
                 
                 drop.animate([
@@ -645,9 +672,12 @@
 
     function triggerLightning() {
         const flash = document.createElement('div');
-        // Ensure it sits behind the rain but in front of the board
-        flash.style.cssText = `position:fixed; top:0; left:0; width:100vw; height:100vh; background:#fffdf5; opacity:0; z-index:9998; pointer-events:none;`;        document.body.appendChild(flash);
-
+        const isMidnight = document.body.classList.contains('midnight-mode');
+        const flashColor = isMidnight ? "#1a2c4e" : "#fffdf5";
+        flash.style.cssText = `position:fixed; top:0; left:0; width:100vw; height:100vh; background:${flashColor}; opacity:0; z-index:${zAnim}; pointer-events:none;`;
+        
+        document.body.appendChild(flash);
+        
         // Multi-strike pattern: Strike 1 (Fast), Gap, Strike 2 (Stronger)
         flash.animate([
             { opacity: 0, offset: 0 },
@@ -663,10 +693,13 @@
     }
 
     function triggerFireworks(count) {
+        const colors = getThemeColors();
+        const palette = [colors.gold, '#ffffff', colors.red];
         for (let i = 0; i < count; i++) {
             const f = document.createElement('div'); f.className = 'firework';
+            f.style.zIndex = zAnim;
             f.innerText = ['♠', '♥', '♦', '♣'][getCryptoRandom(4)];
-            f.style.color = ['var(--gold)','#fff','#ff5252'][getCryptoRandom(3)];
+            f.style.color = palette[getCryptoRandom(3)];
             f.style.left = '50vw'; f.style.top = '50vh'; document.body.appendChild(f);
             const a = Math.random()*Math.PI*2, d = Math.random()*600;
             f.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(0)`,opacity:0}], 1500 + Math.random()*1000);
@@ -695,17 +728,26 @@
         const body = document.body;
         const icon = document.getElementById('theme-icon');
         
-        // 1. Toggle the class
+        // Add the spin animation
+        icon.classList.add('theme-spinning');
+        
         body.classList.toggle('midnight-mode');
         
-        // 2. Update the Icon and Save Preference
-        if (body.classList.contains('midnight-mode')) {
-            icon.innerText = "☀️"; // Show sun for "Back to Light"
-            localStorage.setItem('treceTheme', 'midnight');
-        } else {
-            icon.innerText = "🌙"; // Show moon for "Go Dark"
-            localStorage.setItem('treceTheme', 'classic');
-        }
+        const isMidnight = body.classList.contains('midnight-mode');
+        icon.innerText = isMidnight ? "☀️" : "🌙";
+        localStorage.setItem('treceTheme', isMidnight ? 'midnight' : 'classic');
+
+        // Remove the spin class after animation completes so it can be reused
+        setTimeout(() => icon.classList.remove('theme-spinning'), 500);
+    }
+
+    function getThemeColors() {
+        const style = getComputedStyle(document.documentElement);
+        return {
+            red: style.getPropertyValue('--suit-red').trim(),
+            black: style.getPropertyValue('--suit-black').trim(),
+            gold: style.getPropertyValue('--gold').trim()
+        };
     }
 
     window.onload = initGame;
