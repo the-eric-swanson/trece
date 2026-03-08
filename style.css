@@ -104,8 +104,9 @@
             border-radius: 6px; border: 1px solid #777;
             position: absolute; box-shadow: 0 4px 8px rgba(0,0,0,0.5); 
             display: flex; flex-direction: column; padding: 6%; box-sizing: border-box;
-            
-            /* THE FIX: Only transition colors/filters. DO NOT include 'transform' or 'top' here */
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden; /* For Safari/iOS stability */
+            transform-style: preserve-3d;
             transition: background-color 0.8s ease, color 0.8s ease, filter 0.8s ease;
         }
 
@@ -133,6 +134,7 @@
             border: 3px solid white;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.2);
             transition: background-color 0.8s ease, box-shadow 0.8s ease;
+            transform: rotateY(0deg);
         }
 
         .card.facedown * { display: none; }
@@ -731,7 +733,7 @@
         }
 
         /* THE FLIP: Quick and snappy */
-        .flipping {
+       .flipping {
             transition: transform 0.15s ease-in-out !important;
         }
 
@@ -808,7 +810,7 @@
         }
 
         #scaler.right-handed-layout .flipping {
-            transform: rotateY(-90deg) !important;
+            --flip-angle: -90deg;
         }
 
         /* CONSOLIDATED MODAL LAYOUT */

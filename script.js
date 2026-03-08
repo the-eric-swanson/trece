@@ -200,29 +200,36 @@
     function reveal() {
         let flippedCount = 0;
         const columns = document.querySelectorAll('.column');
-        
+        const isRight = document.getElementById('scaler').classList.contains('right-handed-layout');
+        const targetAngle = isRight ? -90 : 90;
+
         columns.forEach(col => {
             const last = col.lastElementChild;
             if (last && last.classList.contains('facedown')) {
                 flippedCount++;
+                
+                // Phase 1: Spin to 90/-90 degrees
                 last.classList.add('flipping');
-                last.style.transform = "rotateY(90deg)";
+                last.style.transform = `rotateY(${targetAngle}deg)`;
                 
                 setTimeout(() => { 
+                    // Phase 2: Swap face and spin to 0
+                    // CRITICAL: We remove facedown here so the front is visible as it spins back
                     last.classList.remove('facedown'); 
                     last.style.transform = "rotateY(0deg)";
                     
                     setTimeout(() => {
+                        // Phase 3: Total Cleanup
                         last.classList.remove('flipping');
+                        last.style.transform = ""; 
+                        
                         flippedCount--;
-                        // CRITICAL: This ensures win-check runs after the last card flips
                         if (flippedCount === 0) check(); 
-                    }, 150);
+                    }, 160); // 160ms gives the 0.15s CSS transition room to breathe
                 }, 150);
             }
         });
 
-        // If no cards need flipping, we still need to check for the win
         if (flippedCount === 0) check();
     }
 
@@ -361,7 +368,7 @@
         if (isWin) {
             if (isP) msg = "PERFECT! You cleared the board without drawing a single card. +100 Points!";
             else if (isC) msg = `CLEAN SWEEP! 10 pts + ${deck.length} deck bonus = ${score} Points!`;
-            else msg = `Victory! 5 pts + ${deck.length} deck bonus = ${score} Points!`;
+            else msg = `5 pts + ${deck.length} deck bonus = ${score} Points!`;
         } else {
             const cardCount = Math.abs(score);
             const cardWord = cardCount === 1 ? "card" : "cards";
@@ -376,7 +383,7 @@
             } else if (score >= 10) {
                 triggerVortex(); // The New Medium Win Option
             } else {
-                triggerFireworks(isP ? 120 : 60); // Small fireworks for small win
+                triggerFireworks(isP ? 500 : 60); // Small fireworks for small win
             }
         }
          else { 
