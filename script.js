@@ -360,14 +360,14 @@
         const dc = document.getElementById('discard-slot').children.length;
         const ac = document.getElementById('active-slot').children.length;
         let isP = isWin && (deck.length === 24 && dc === 0 && ac === 0);
-        let isC = isWin && !isP && (dc === 0 && ac === 0 && deck.length > 0);
+        let isC = isWin && !isP && (dc === 0 && ac === 0);
         
         const score = isWin ? (isP ? 100 : (isC ? 10 + deck.length : 5 + deck.length)) : -document.querySelectorAll('.column .card').length;
         
         let msg = "";
         if (isWin) {
-            if (isP) msg = "PERFECT! You cleared the board without drawing a single card. +100 Points!";
-            else if (isC) msg = `CLEAN SWEEP! 10 pts + ${deck.length} deck bonus = ${score} Points!`;
+            if (isP) msg = "You cleared the board without drawing a single card. +100 Points!";
+            else if (isC) msg = `10 pts + ${deck.length} deck bonus = ${score} Points!`;
             else msg = `5 pts + ${deck.length} deck bonus = ${score} Points!`;
         } else {
             const cardCount = Math.abs(score);
@@ -383,7 +383,8 @@
             } else if (score >= 10) {
                 triggerVortex(); // The New Medium Win Option
             } else {
-                triggerFireworks(isP ? 500 : 60); // Small fireworks for small win
+                const fireworkCount = Math.max(deck.length * 100, 20);
+                triggerFireworks(isP ? 5000 : fireworkCount);
             }
         }
          else { 
@@ -393,10 +394,11 @@
                 setTimeout(() => document.body.classList.remove('shake-it'), 1550);
                 }
             else if (score > -10) {
-               triggerLossAnimation(20);
+               const cardsLeft = Math.abs(score);
+                triggerLossAnimation(cardsLeft * 10);
             } 
             else {
-                triggerLossAnimation(80);
+                triggerLossAnimation(100);
                 triggerLightning();
                 setTimeout(triggerLightning, 1200);
             }
