@@ -146,6 +146,10 @@
                 if(i === cards.length-1) { reposition(); reveal(); }
             }, 400); // Matches the 0.6s in CSS
         });
+            setTimeout(() => {
+            reposition(); 
+            reveal(); // This flips the next card while the old ones are still flying
+        }, 50); 
     }
 
     function drawCard() {
@@ -163,8 +167,10 @@
             old.style.zIndex = "100";
             // Ensure the slide is smooth
             old.style.transition = "transform 0.15s ease-out"; 
-            old.style.transform = `translateX(${active.offsetWidth * 1.2}px)`;
-            
+            // Determine direction: Positive for Left Hand, Negative for Right Hand
+            const isRightHanded = document.getElementById('scaler').classList.contains('right-handed-layout');
+            const direction = isRightHanded ? -1.2 : 1.2;
+            old.style.transform = `translateX(${active.offsetWidth * direction}px)`;            
             setTimeout(() => { 
                 old.style.transition = ""; // Reset
                 old.style.transform = "none"; 
@@ -696,13 +702,31 @@
         const colors = getThemeColors();
         const palette = [colors.gold, '#ffffff', colors.red];
         for (let i = 0; i < count; i++) {
-            const f = document.createElement('div'); f.className = 'firework';
+            const f = document.createElement('div'); 
+            f.className = 'firework';
             f.style.zIndex = zAnim;
             f.innerText = ['♠', '♥', '♦', '♣'][getCryptoRandom(4)];
             f.style.color = palette[getCryptoRandom(3)];
-            f.style.left = '50vw'; f.style.top = '50vh'; document.body.appendChild(f);
-            const a = Math.random()*Math.PI*2, d = Math.random()*600;
-            f.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*d}px,${Math.sin(a)*d}px) scale(0)`,opacity:0}], 1500 + Math.random()*1000);
+            f.style.left = '50vw'; 
+            f.style.top = '50vh';
+            
+            // Center the element on its coordinates and start invisible
+            f.style.transform = 'translate(-50%, -50%)';
+            f.style.opacity = '0'; 
+            
+            document.body.appendChild(f);
+            
+            const a = Math.random() * Math.PI * 2;
+            const d = Math.random() * 600;
+            
+            f.animate([
+                { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+                { transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d}px)) scale(0)`, opacity: 0 }
+            ], {
+                duration: 1500 + Math.random() * 1000,
+                fill: 'forwards'
+            });
+
             setTimeout(() => f.remove(), 2500);
         }
     }
@@ -726,19 +750,37 @@
 
     function toggleTheme() {
         const body = document.body;
+        // We look for the icon in the header OR the modal
         const icon = document.getElementById('theme-icon');
         
-        // Add the spin animation
-        icon.classList.add('theme-spinning');
+        if (icon) {
+            icon.classList.add('theme-spinning');
+        }
         
         body.classList.toggle('midnight-mode');
         
         const isMidnight = body.classList.contains('midnight-mode');
-        icon.innerText = isMidnight ? "☀️" : "🌙";
+        
+        // Update the icon if it exists
+        if (icon) {
+            icon.innerText = isMidnight ? "☀️" : "🌙";
+        }
+
         localStorage.setItem('treceTheme', isMidnight ? 'midnight' : 'classic');
 
-        // Remove the spin class after animation completes so it can be reused
-        setTimeout(() => icon.classList.remove('theme-spinning'), 500);
+        // Clean up animation class
+        setTimeout(() => {
+            if (icon) icon.classList.remove('theme-spinning');
+        }, 500);
+    }
+
+    function toggleOptions() {
+        const modal = document.getElementById('options-modal');
+        if (modal.style.display === 'flex') {
+            modal.style.display = 'none';
+        } else {
+            modal.style.display = 'flex';
+        }
     }
 
     function getThemeColors() {
@@ -750,14 +792,42 @@
         };
     }
 
-    window.onload = initGame;
-    if (localStorage.getItem('treceTheme') === 'midnight') {
-    document.body.classList.add('midnight-mode');
+    function setHandedness(hand) {
+        const scaler = document.getElementById('scaler');
+        const lBtn = document.getElementById('left-hand-btn');
+        const rBtn = document.getElementById('right-hand-btn');
+
+        if (hand === 'right') {
+            scaler.classList.add('right-handed-layout');
+        } else {
+            scaler.classList.remove('right-handed-layout');
+        }
+
+        // Update button styles: Selected gets solid gold, unselected gets outline
+        if (lBtn && rBtn) {
+            const activeStyle = { background: "var(--gold)", color: "#051a05", opacity: "1" };
+            const inactiveStyle = { background: "transparent", color: "var(--gold)", opacity: "0.6" };
+
+            Object.assign(lBtn.style, hand === 'left' ? activeStyle : inactiveStyle);
+            Object.assign(rBtn.style, hand === 'right' ? activeStyle : inactiveStyle);
+        }
+
+        localStorage.setItem('treceHandedness', hand);
     }
-    // Check for saved theme on startup
-    const savedTheme = localStorage.getItem('treceTheme');
-    if (savedTheme === 'midnight') {
-        document.body.classList.add('midnight-mode');
-        const icon = document.getElementById('theme-icon');
-        if (icon) icon.innerText = "☀️";
+
+    window.onload = () => {
+        // 1. Start the game engine
+        initGame();
+
+        // 2. Sync Theme (Classic vs. Midnight)
+        const savedTheme = localStorage.getItem('treceTheme');
+        if (savedTheme === 'midnight') {
+            document.body.classList.add('midnight-mode');
+            const icon = document.getElementById('theme-icon');
+            if (icon) icon.innerText = "☀️";
+        }
+
+        // 3. Sync Handedness (Left vs. Right)
+        const savedHand = localStorage.getItem('treceHandedness') || 'left';
+        setHandedness(savedHand);
     }

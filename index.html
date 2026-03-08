@@ -31,31 +31,49 @@
                 <div class="stat-item"><span id="game-val">1</span><span class="stat-label">Game</span></div>
                 <div class="stat-item"><span id="score-val">0</span><span class="stat-label">Score</span></div>
                 <div class="stat-item"><span><span id="wins-val">0</span>/<span id="loss-val">0</span></span><span class="stat-label">Win/Loss</span></div>
-                <div class="stat-item" onclick="toggleTheme()" style="cursor:pointer;">
-                    <span id="theme-icon">🌙</span>
-                    <span class="stat-label">Theme</span>
+                <div class="stat-item" onclick="toggleOptions()" style="cursor:pointer;">
+                    <span style="font-size: 1.2rem; color: var(--gold);">☰</span>
+                    <span class="stat-label">Options</span>
                 </div>
             </div>
         </div>
 
-    <div id="top-bar">
-        <div id="deck-slot" onclick="drawCard()"></div>
-        <div class="slot" id="active-slot"></div>
-        <div class="slot" id="discard-slot"></div>
-        <div class="slot" id="success-slot"></div>
+        <div id="top-bar">
+            <div id="deck-slot" onclick="drawCard()"></div>
+            <div class="slot" id="active-slot"></div>
+            <div class="slot" id="discard-slot"></div>
+            <div class="slot" id="success-slot"></div>
+        </div>
+
+        <div id="game-board">
+            <div class="column" id="col-0"></div><div class="column" id="col-1"></div>
+            <div class="column" id="col-2"></div><div class="column" id="col-3"></div>
+            <div class="column" id="col-4"></div><div class="column" id="col-5"></div>
+            <div class="column" id="col-6"></div>
+        </div>
+
+        <div class="bottom-controls">
+            <button id="board-deal-btn" class="shiny-gold-btn" onclick="initGame()">DEAL AGAIN</button>
+        </div>
     </div>
 
-    <div id="game-board">
-        <div class="column" id="col-0"></div><div class="column" id="col-1"></div>
-        <div class="column" id="col-2"></div><div class="column" id="col-3"></div>
-        <div class="column" id="col-4"></div><div class="column" id="col-5"></div>
-        <div class="column" id="col-6"></div>
-    </div>
+<div class="modal-overlay" id="options-modal">
+    <div class="modal-box">
+        <h2 style="color:var(--gold); letter-spacing:2px; text-align: center; margin-bottom: 5px;">OPTIONS</h2>
+        <hr style="border: 0; border-top: 1px solid rgba(212,175,55,0.3); margin: 15px 0;">
+        
+        <button class="btn-primary" onclick="openRules(); toggleOptions();">📖 About the Game</button>
+        <button class="btn-primary" onclick="toggleTheme();">
+            <span id="theme-icon">🌙</span> Day/Night Mode
+        </button>
+        <button class="btn-primary" onclick="toggleFullscreen(); toggleOptions();">🖥️ Fullscreen</button>
 
-    <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
-        <button onclick="openRules()">About this game</button>
-        <button id="board-deal-btn" onclick="initGame()">Deal again</button>
-        <button onclick="toggleFullscreen()">Fullscreen</button>
+        <div class="hand-row">
+            <button id="left-hand-btn" class="btn-primary" onclick="setHandedness('left')">LEFT HAND</button>
+            <button id="right-hand-btn" class="btn-primary" onclick="setHandedness('right')">RIGHT HAND</button>
+        </div>
+
+        <button class="btn-primary btn-felt" onclick="toggleOptions()">Back to Game</button>
     </div>
 </div>
 
@@ -77,10 +95,10 @@
         </p>
 
         <div style="text-align: center; margin-top: 10px;">
-            <button onclick="window.open('https://www.buymeacoffee.com/trece', '_blank')" 
-                    style="background: #ffffff; color: #000000; border: none; width: 100%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <a href="https://www.buymeacoffee.com/trece" target="_blank" 
+            style="text-decoration: none; background: #ffffff; color: #000000; width: 100%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: bold; cursor: pointer; padding: 12px 0; border-radius: 6px;">
                 <span style="font-size: 1.2rem;">☕</span> Support the Developer
-            </button>
+            </a>
             <p style="font-size: 0.75rem; opacity: 0.9; margin-top: 5px;">Help keep Trece ad-free and updated!</p>
         </div>
 
