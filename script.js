@@ -1,16 +1,18 @@
- /* ALL LOGIC REMAINS IDENTICAL: 
-       - Deep Scan Logic
-       - Tiered Feedback Phrases
-       - Fisher-Yates Shuffle with cut
-       - 1.6s Delay on Loss
-    */
+    const SUPABASE_URL = 'https://ngaghclerugrfppmqujy.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_WN-KWNCicdm8IHVUTSlWeA_2tKSbc1d';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let wins = 0, losses = 0, gameCounter = 1;
+    let activeSlot, discardSlot, successSlot, deckSlot;
+    let scoreVal, winsVal, lossVal, deckCountVal, gameVal;
+    let endModal, endTitle, endMessage;
+    let rulesModal, optionsModal, leaderboardModal;
     let lossTimer = null; // Tracks the pending "Game Over"
     let winTimer = null; // New variable to protect the victory trigger
     let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false, isLocked = false;
     let highScore = localStorage.getItem('treceHighScore') || 0; // Loads the high score from the user's device
     const zAnim = getComputedStyle(document.documentElement).getPropertyValue('--z-animations').trim() || '12000';
+    const sessionID = crypto.randomUUID();
 
     function getCryptoRandom(max) {
         const array = new Uint32Array(1);
@@ -41,10 +43,10 @@
    function initGame() {
         if (winTimer) { clearTimeout(winTimer); winTimer = null; }
         if (isLocked) return;
-        if (roundEnded) { gameCounter++; document.getElementById('game-val').innerText = gameCounter; }
+        if (roundEnded) { gameCounter++; gameVal.innerText = gameCounter; }
         roundEnded = false; selectedCard = null;
-        document.getElementById('end-modal').style.display = 'none';
-        document.getElementById('rules-modal').style.display = 'none';
+        endModal.style.display = 'none';
+        rulesModal.style.display = 'none';
         
         deck = [];
         const suits = [{s:'♠',c:'black'},{s:'♥',c:'#d32f2f'},{s:'♦',c:'#d32f2f'},{s:'♣',c:'black'}];
@@ -85,7 +87,7 @@
     }
 
     function updateDeckVisuals() {
-        const ds = document.getElementById('deck-slot');
+        const ds = deckSlot;
         ds.innerHTML = '';
         
         if (deck.length > 0) {
@@ -127,7 +129,7 @@
     }
 
     function fly(cards) {
-        const success = document.getElementById('success-slot');
+        const success = successSlot;
         const sRect = success.getBoundingClientRect();
         cards.forEach((el, i) => {
             const eRect = el.getBoundingClientRect();
@@ -158,7 +160,7 @@
             selectedCard.classList.remove('selected');
             selectedCard = null;
         }
-        const active = document.getElementById('active-slot'), discard = document.getElementById('discard-slot'), ds = document.getElementById('deck-slot');
+        const active = activeSlot, discard = discardSlot, ds = deckSlot;
         if (active.children.length > 0 && active.children[0].classList.contains('in-transit')) {
         return;
         }
@@ -259,7 +261,7 @@
         });
     }
 
-    function updateUI() { document.getElementById('deck-count').innerText = deck.length; }
+    function updateUI() { deckCountVal.innerText = deck.length; }
 
     function getComment(score, isWin) {
         if (isWin) {
@@ -322,9 +324,9 @@
             }
         });
 
-        const discard = document.getElementById('discard-slot').lastElementChild;
+        const discard = discardSlot.lastElementChild;
         if (discard) masterPool.push(discard);
-        const active = document.getElementById('active-slot').lastElementChild;
+        const active = activeSlot.lastElementChild;
         if (active) masterPool.push(active);
 
         let moves = false;
@@ -357,8 +359,8 @@
         if (roundEnded) return; 
         roundEnded = true;
         
-        const dc = document.getElementById('discard-slot').children.length;
-        const ac = document.getElementById('active-slot').children.length;
+        const dc = discardSlot.children.length;
+        const ac = activeSlot.children.length;
         let isP = isWin && (deck.length === 24 && dc === 0 && ac === 0);
         let isC = isWin && !isP && (dc === 0 && ac === 0);
         
@@ -384,7 +386,7 @@
                 triggerVortex(); // The New Medium Win Option
             } else {
                 const fireworkCount = Math.max(deck.length * 100, 20);
-                triggerFireworks(isP ? 5000 : fireworkCount);
+                triggerFireworks(isP ? 1000 : fireworkCount);
             }
         }
          else { 
@@ -417,6 +419,26 @@
         if (sessionScore > highScore) {
             highScore = sessionScore;
             localStorage.setItem('treceHighScore', highScore);
+        }
+
+        if (isWin && hasPromptedThisSession) {
+            const savedInitials = document.getElementById('initials-input').value.toUpperCase();
+            
+            // 1. UPDATE THE UI IMMEDIATELY
+            scoreVal.innerText = sessionScore; 
+            
+            // 2. SEND TO DATABASE
+            supabaseClient
+                .from('leaderboard')
+                .upsert({ 
+                    session_id: sessionID, 
+                    initials: savedInitials, 
+                    score: sessionScore 
+                }, { onConflict: 'session_id' })
+                .then(() => {
+                    console.log("✅ Background Update Successful!");
+                    setTimeout(openLeaderboard, 1000); 
+                });
         }
 
        // --- TIERED MENTAL HEALTH BREAK LOGIC ---
@@ -464,66 +486,52 @@
         }
 
         // --- UI UPDATE & MODAL DISPLAY ---
-        document.getElementById('score-val').innerText = sessionScore;
-        document.getElementById('wins-val').innerText = wins; 
-        document.getElementById('loss-val').innerText = losses;
-        document.getElementById('end-title').innerText = isP ? "PERFECT!" : (isC ? "CLEAN SWEEP!" : (isWin ? "VICTORY" : "GAME OVER"));
+        scoreVal.innerText = sessionScore;
+        winsVal.innerText = wins; 
+        lossVal.innerText = losses;
+        endTitle.innerText = isP ? "PERFECT!" : (isC ? "CLEAN SWEEP!" : (isWin ? "VICTORY" : "GAME OVER"));
         document.getElementById('end-comment').innerText = getComment(score, isWin);
         
         // Set the main text content
-        document.getElementById('end-message').innerHTML = `${msg}${breakMessage ? `<br>${breakMessage}` : ""}`;
+        endMessage.innerHTML = `${msg}${breakMessage ? `<br>${breakMessage}` : ""}`;
 
-        // IMPORTANT: Clear any previous coffee button and re-insert at the bottom if needed
-        // We append the button after the primary action button
+       // 1. Identify the modal box and clear previous special states
         const modalBox = document.querySelector('#end-modal .modal-box');
         modalBox.classList.remove('perfect-win-border');
+        endTitle.style.textShadow = "none";
+        endTitle.style.color = "var(--gold)";
 
+        // 2. Handle the "Perfect Win" styling
         if (isP) {
             modalBox.classList.add('perfect-win-border');
-            // 1. Set the text content first
-        document.getElementById('end-message').innerHTML = `${msg}${breakMessage ? `<br>${breakMessage}` : ""}`;
-
-        // 2. Identify the modal box
-        const modalBox = document.querySelector('#end-modal .modal-box');
-        modalBox.classList.remove('perfect-win-border');
-
-        if (isP) {
-            modalBox.classList.add('perfect-win-border');
-            document.getElementById('end-title').style.color = "#ffdf00";
-            document.getElementById('end-title').style.textShadow = "0 0 10px rgba(255, 223, 0, 0.8)";
-        } else {
-            document.getElementById('end-title').style.color = "var(--gold)";
-            document.getElementById('end-title').style.textShadow = "none";
+            endTitle.style.color = "#ffdf00";
+            endTitle.style.textShadow = "0 0 10px rgba(255, 223, 0, 0.8)";
         }
 
-        // 3. Re-insert the support button at the very bottom
+        // 3. Update the text content
+        endTitle.innerText = isP ? "PERFECT!" : (isC ? "CLEAN SWEEP!" : (isWin ? "VICTORY" : "GAME OVER"));
+        endMessage.innerHTML = `${msg}${breakMessage ? `<br>${breakMessage}` : ""}`;
+        document.getElementById('end-comment').innerText = getComment(score, isWin);
+
+        // 4. Handle the Support Button
         const oldBtn = modalBox.querySelector('.support-btn-container');
         if (oldBtn) oldBtn.remove();
 
         if (coffeeButtonHTML) {
             const btnContainer = document.createElement('div');
             btnContainer.className = 'support-btn-container';
-            btnContainer.style.marginTop = "30px"; // Adds space from "View Board"
+            btnContainer.style.marginTop = "30px";
             btnContainer.innerHTML = coffeeButtonHTML;
             modalBox.appendChild(btnContainer);
         }
-        } else {
+        
+        else {
             // Reset title color for normal games
-            document.getElementById('end-title').style.color = "var(--gold)";
+            endTitle.style.color = "var(--gold)";
         }
         
-        // Remove old support button if it exists to avoid duplicates
-        const oldBtn = modalBox.querySelector('.support-btn-container');
-        if (oldBtn) oldBtn.remove();
 
-        if (coffeeButtonHTML) {
-            const btnContainer = document.createElement('div');
-            btnContainer.className = 'support-btn-container';
-            btnContainer.innerHTML = coffeeButtonHTML;
-            modalBox.appendChild(btnContainer); // Places it at the very bottom
-        }
-
-        document.getElementById('end-modal').style.display = 'flex';
+        endModal.style.display = 'flex';
 
         if (cooldown > 0) {
         isLocked = true;
@@ -753,9 +761,9 @@
     function openRules() {
         const modalHigh = document.getElementById('modal-high-score');
         if (modalHigh) modalHigh.innerText = highScore;
-        document.getElementById('rules-modal').style.display = 'flex'; }
-    function closeRules() { document.getElementById('rules-modal').style.display = 'none'; }
-    function viewBoard() { document.getElementById('end-modal').style.display = 'none'; }
+        rulesModal.style.display = 'flex'; }
+    function closeRules() { rulesModal.style.display = 'none'; }
+    function viewBoard() { endModal.style.display = 'none'; }
 
     function toggleTheme() {
         const body = document.body;
@@ -784,7 +792,7 @@
     }
 
     function toggleOptions() {
-        const modal = document.getElementById('options-modal');
+        const modal = optionsModal;
         if (modal.style.display === 'flex') {
             modal.style.display = 'none';
         } else {
@@ -824,11 +832,230 @@
         localStorage.setItem('treceHandedness', hand);
     }
 
-    window.onload = () => {
-        // 1. Start the game engine
-        initGame();
+    // Helper for your specific wording requirements
+    function getRankWord(rank) {
+        const words = ["highest", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth"];
+        return words[rank - 1] || "top";
+    }
 
-        // 2. Sync Theme (Classic vs. Midnight)
+    // Global to track if they've already been prompted this session
+    let hasPromptedThisSession = false;
+
+    function showInitialsEntry(rank, timeframe) {
+        if (hasPromptedThisSession) return;
+        
+        const rankWord = getRankWord(rank);
+        const entryArea = document.getElementById('high-score-entry');
+        const messageDisplay = entryArea.querySelector('p');
+        
+        // Updated line to include the score value
+        messageDisplay.innerHTML = `You got the ${rank !== 1 ? rankWord + ' ' : ''}highest score ${timeframe}!<br>` +
+                                `<span style="font-size: 1.4rem; color: #fff;">${sessionScore} POINTS</span>`;
+        
+        entryArea.style.display = 'block';
+        hasPromptedThisSession = true; 
+    }
+
+    async function submitScore() {
+        const initials = document.getElementById('initials-input').value.toUpperCase().trim();
+        if (initials.length !== 3) return alert("Enter 3 initials.");
+
+        const { error } = await supabaseClient
+            .from('leaderboard')
+            .upsert(
+                { 
+                    session_id: sessionID, // The hidden ID
+                    initials: initials,    // The displayed name
+                    score: sessionScore 
+                }, 
+                { onConflict: 'session_id' } // Always update based on the session, not the name
+            );
+
+        if (!error) {
+            document.getElementById('initials-input').value = ''; // <--- Clear the box
+            document.getElementById('high-score-entry').style.display = 'none';
+            viewBoard();
+            openLeaderboard();
+        }
+    }
+
+    function openLeaderboard() {
+        if (optionsModal) optionsModal.style.display = 'none';
+        leaderboardModal.style.display = 'flex';
+        loadLeaderboard('all'); // Default to All-Time
+        fetchGlobalRank(); //
+    }
+
+    function closeLeaderboard() {
+        leaderboardModal.style.display = 'none';
+    }
+
+    async function loadLeaderboard(timeframe) {
+        // 1. UI Feedback: Update Active Tab
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`tab-${timeframe}`).classList.add('active');
+        
+        const body = document.getElementById('leaderboard-body');
+        const loader = document.getElementById('leaderboard-loader');
+        
+        body.innerHTML = '';
+        loader.style.display = 'block';
+
+        // 2. Build Query
+        let query = supabaseClient
+            .from('leaderboard')
+            .select('initials, score, created_at, session_id') // <--- Add session_id here
+            .order('score', { ascending: false })
+            .limit(10);
+
+        // Apply Time Filters
+        if (timeframe !== 'all') {
+            const date = new Date();
+            if (timeframe === 'week') date.setDate(date.getDate() - 7);
+            if (timeframe === 'month') date.setMonth(date.getMonth() - 1);
+            if (timeframe === 'year') date.setFullYear(date.getFullYear() - 1);
+            query = query.gte('created_at', date.toISOString());
+        }
+
+        // 3. Execute and Render
+        const { data, error } = await query;
+        loader.style.display = 'none';
+
+        if (error) {
+            body.innerHTML = '<tr><td colspan="3">ERROR LOADING DATA</td></tr>';
+            return;
+        }
+
+        if (data.length === 0) {
+            body.innerHTML = '<tr><td colspan="3">NO SCORES YET</td></tr>';
+            return;
+        }
+
+        data.forEach((entry, index) => {
+            // Check if this row belongs to the current user's session
+            const isCurrentUser = entry.session_id === sessionID;
+            
+            // Add a special 'current-user' class if it matches
+            const rowClass = isCurrentUser ? 'class="current-user-row"' : '';
+
+            const row = `
+                <tr ${rowClass}>
+                    <td>${index + 1}</td>
+                    <td style="${isCurrentUser ? 'color: #fff; text-shadow: 0 0 10px var(--gold);' : ''}">${entry.initials}</td>
+                    <td>${entry.score}</td>
+                </tr>
+            `;
+            body.innerHTML += row;
+        });
+    }
+
+    async function checkLeaderboard(playerScore) {
+        console.log("🔍 Checking eligibility for score:", playerScore);
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+        try {
+            // 1. Fetch All-Time Top 10
+            const { data: allTime, error: atError } = await supabaseClient
+                .from('leaderboard')
+                .select('score')
+                .order('score', { ascending: false })
+                .limit(10);
+
+            if (atError) throw atError;
+
+            let rank = 0;
+            let timeframe = "";
+
+            // Check All-Time: If board has room (<10) OR you beat the bottom score
+            // The ?.score || 0 prevents the crash if the list is empty
+            if (!allTime || allTime.length < 10 || playerScore > (allTime[allTime.length - 1]?.score || 0)) {
+                timeframe = "ever";
+                rank = calculateRank(playerScore, allTime);
+            } else {
+                // 2. Check Weekly: Only if you didn't make the All-Time list
+                const { data: weekly, error: wError } = await supabaseClient
+                    .from('leaderboard')
+                    .select('score')
+                    .order('score', { ascending: false })
+                    .gte('created_at', oneWeekAgo.toISOString())
+                    .limit(10);
+
+                if (wError) throw wError;
+
+                if (!weekly || weekly.length < 10 || playerScore > (weekly[weekly.length - 1]?.score || 0)) {
+                    timeframe = "this week";
+                    rank = calculateRank(playerScore, weekly);
+                }
+            }
+
+            if (rank > 0) {
+                console.log(`🏆 Qualified! Rank: ${rank} Timeframe: ${timeframe}`);
+                showInitialsEntry(rank, timeframe);
+            } else {
+                console.log("😅 Not quite a high score. Better luck next time!");
+            }
+        } catch (err) {
+            console.error("❌ Leaderboard Check Failed:", err.message);
+        }
+    }
+
+    function calculateRank(score, list) {
+            if (!list || list.length === 0) return 1;
+            for (let i = 0; i < list.length; i++) {
+                if (score > list[i].score) return i + 1;
+            }
+            return Math.min(list.length + 1, 10);
+        }
+
+    async function fetchGlobalRank() {
+        if (sessionScore <= 0) return; // Don't show rank if they haven't scored yet
+
+        // We count how many scores are strictly GREATER than the user's best score
+        const { count, error } = await supabaseClient
+            .from('leaderboard')
+            .select('*', { count: 'exact', head: true })
+            .gt('score', sessionScore);
+
+        if (!error) {
+            const footer = document.getElementById('global-rank-footer');
+            const rankVal = document.getElementById('user-rank-val');
+            
+            footer.style.display = 'block';
+            rankVal.innerText = `#${count + 1}`; // Count + 1 is their actual rank
+        }
+    }
+
+
+    window.onload = () => {
+        // Cache the Slots
+        activeSlot = document.getElementById('active-slot');
+        discardSlot = document.getElementById('discard-slot');
+        successSlot = document.getElementById('success-slot');
+        deckSlot = document.getElementById('deck-slot');
+
+        // Cache the UI Labels
+        scoreVal = document.getElementById('score-val');
+        winsVal = document.getElementById('wins-val');
+        lossVal = document.getElementById('loss-val');
+        deckCountVal = document.getElementById('deck-count');
+        gameVal = document.getElementById('game-val');
+
+        // Cache the Modal Elements
+        endModal = document.getElementById('end-modal');
+        endTitle = document.getElementById('end-title');
+        endMessage = document.getElementById('end-message');
+        rulesModal = document.getElementById('rules-modal');
+        optionsModal = document.getElementById('options-modal');
+        leaderboardModal = document.getElementById('leaderboard-modal')
+
+        const submitBtn = document.getElementById('submit-score-btn');
+            if (submitBtn) submitBtn.onclick = submitScore;
+
+            // Ensure it's hidden on start
+            if (leaderboardModal) leaderboardModal.style.display = 'none';
+
+        // Sync Theme & Handedness
         const savedTheme = localStorage.getItem('treceTheme');
         if (savedTheme === 'midnight') {
             document.body.classList.add('midnight-mode');
@@ -836,7 +1063,14 @@
             if (icon) icon.innerText = "☀️";
         }
 
-        // 3. Sync Handedness (Left vs. Right)
         const savedHand = localStorage.getItem('treceHandedness') || 'left';
         setHandedness(savedHand);
+
+        document.getElementById('initials-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                submitScore();
+            }
+        });
+
+        initGame();
     }

@@ -73,6 +73,8 @@
             <button id="right-hand-btn" class="btn-primary" onclick="setHandedness('right')">RIGHT HAND</button>
         </div>
 
+        <button onclick="openLeaderboard()" class="btn-primary">🏆 LEADERBOARD</button>
+
         <button class="btn-primary btn-felt" onclick="toggleOptions()">Back to Game</button>
     </div>
 </div>
@@ -113,9 +115,53 @@
         <p id="end-message" style="font-weight: bold; margin-bottom: 20px; color: var(--gold);"></p>
         <button id="modal-deal-btn" class="btn-primary" onclick="initGame()">Deal Again</button>
         <button onclick="viewBoard()" style="border:none; background:transparent; font-size:0.8rem; opacity:0.8; display:block; margin: 6px auto 0;">VIEW THE BOARD</button>
+        <div id="high-score-entry" style="display: none; margin-bottom: 20px; animation: scale-in 0.5s both;">
+            <h2 style="color: #ffdf00; text-shadow: 0 0 10px rgba(255,223,0,0.5);">NEW HIGH SCORE!</h2>
+            <p>Enter your initials to join the board:</p>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <input type="text" id="initials-input" maxlength="3" 
+                    style="width: 80px; text-align: center; font-size: 1.5rem; background: rgba(0,0,0,0.3); color: var(--gold); border: 2px solid var(--gold); border-radius: 4px; text-transform: uppercase;">
+                <button id="submit-score-btn" class="shiny-gold-btn" style="padding: 5px 15px;">SUBMIT</button>
+            </div>
+        </div>
     </div>
 </div>
 
+<div id="leaderboard-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-box leaderboard-box">
+        <h1 class="gold-text">LEADERBOARD</h1>
+        
+        <div class="leaderboard-tabs">
+            <button onclick="loadLeaderboard('week')" id="tab-week" class="tab-btn active">WEEK</button>
+            <button onclick="loadLeaderboard('month')" id="tab-month" class="tab-btn">MONTH</button>
+            <button onclick="loadLeaderboard('year')" id="tab-year" class="tab-btn">YEAR</button>
+            <button onclick="loadLeaderboard('all')" id="tab-all" class="tab-btn">ALL-TIME</button>
+        </div>
+
+        <div id="leaderboard-content">
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>RANK</th>
+                        <th>NAME</th>
+                        <th>SCORE</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    </tbody>
+            </table>
+            <div id="leaderboard-loader" style="display:none;">LOADING...</div>
+        </div>
+
+        <div id="global-rank-footer" style="margin: 10px 0; font-size: 0.9rem; color: var(--gold); border-top: 1px solid rgba(212,175,55,0.2); padding-top: 10px; display: none;">
+            YOUR GLOBAL RANK: <span id="user-rank-val">--</span>
+        </div>
+
+        <button onclick="closeLeaderboard()" class="modal-btn">CLOSE</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="script.js"></script>
 
 </body>

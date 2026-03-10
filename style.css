@@ -854,3 +854,101 @@
         .btn-felt {
             margin-top: 5px !important;
         }
+
+        .leaderboard-box {
+            width: 90%;
+            max-width: 400px;
+            background: rgba(5, 26, 5, 0.95); /* Deep dark green-black */
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 20px rgba(255, 223, 0, 0.3);
+        }
+
+        .leaderboard-tabs {
+            display: flex;
+            justify-content: space-between;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: 1px solid rgba(255, 223, 0, 0.3);
+            color: var(--gold);
+            font-size: 0.7rem;
+            padding: 8px 2px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--gold);
+            color: #051a05;
+            font-weight: bold;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .leaderboard-table th {
+            color: rgba(255, 223, 0, 0.6);
+            font-size: 0.8rem;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 223, 0, 0.2);
+        }
+
+        .leaderboard-table td {
+            padding: 12px 5px;
+            text-align: center;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        /* Highlighting the initials like a classic arcade */
+        .leaderboard-table td:nth-child(2) {
+            color: var(--gold);
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .leaderboard-table tr:nth-child(1) td { font-size: 1.4rem; color: #fffdf0; } /* 1st place pops */
+
+        #global-rank-footer {
+            background: rgba(212, 175, 55, 0.1);
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 15px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        #user-rank-val {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #fff;
+            text-shadow: 0 0 10px var(--gold);
+        }
+
+        #initials-input:focus {
+            outline: none;
+            border-color: #ffdf00 !important;
+            box-shadow: 0 0 10px rgba(255, 223, 0, 0.5);
+        }
+
+                /* This highlights the specific row for the current session */
+        .current-user-row {
+            background: rgba(212, 175, 55, 0.2) !important;
+            border: 1px solid var(--gold);
+            animation: highlight-pulse 2s infinite alternate;
+        }
+
+        @keyframes highlight-pulse {
+            from { box-shadow: inset 0 0 5px rgba(212, 175, 55, 0.2); }
+            to { box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.5); }
+        }
