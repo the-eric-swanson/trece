@@ -955,7 +955,6 @@
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
         try {
-            // 1. Fetch All-Time Top 10
             const { data: allTime, error: atError } = await supabaseClient
                 .from('leaderboard')
                 .select('score')
@@ -967,13 +966,13 @@
             let rank = 0;
             let timeframe = "";
 
-            // Check All-Time: If board has room (<10) OR you beat the bottom score
-            // The ?.score || 0 prevents the crash if the list is empty
-            if (!allTime || allTime.length < 10 || playerScore > (allTime[allTime.length - 1]?.score || 0)) {
+            // --- UPDATED SAFETY CHECK ---
+            const bottomScore = (allTime && allTime.length > 0) ? allTime[allTime.length - 1].score : 0;
+
+            if (!allTime || allTime.length < 10 || playerScore > bottomScore) {
                 timeframe = "ever";
-                rank = calculateRank(playerScore, allTime);
+                rank = calculateRank(playerScore, allTime || []);
             } else {
-                // 2. Check Weekly: Only if you didn't make the All-Time list
                 const { data: weekly, error: wError } = await supabaseClient
                     .from('leaderboard')
                     .select('score')
@@ -983,17 +982,24 @@
 
                 if (wError) throw wError;
 
-                if (!weekly || weekly.length < 10 || playerScore > (weekly[weekly.length - 1]?.score || 0)) {
+                // --- UPDATED WEEKLY SAFETY CHECK ---
+                const bottomWeekly = (weekly && weekly.length > 0) ? weekly[weekly.length - 1].score : 0;
+
+                if (!weekly || weekly.length < 10 || playerScore > bottomWeekly) {
                     timeframe = "this week";
-                    rank = calculateRank(playerScore, weekly);
+                    rank = calculateRank(playerScore, weekly || []);
                 }
             }
 
             if (rank > 0) {
                 console.log(`🏆 Qualified! Rank: ${rank} Timeframe: ${timeframe}`);
+                
+                // ENSURE THIS MODAL TRIGGER IS HERE:
                 showInitialsEntry(rank, timeframe);
+                endModal.style.display = 'flex'; // <--- Make sure this line exists!
             } else {
-                console.log("😅 Not quite a high score. Better luck next time!");
+                console.log("😅 Not quite a high score.");
+                viewBoard(); // Go to the normal stats screen
             }
         } catch (err) {
             console.error("❌ Leaderboard Check Failed:", err.message);
