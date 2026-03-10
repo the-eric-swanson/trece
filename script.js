@@ -421,6 +421,12 @@
             localStorage.setItem('treceHighScore', highScore);
         }
 
+        //Check leaderboard for first win of session
+        if (isWin && !hasPromptedThisSession) {
+            checkLeaderboard(sessionScore); 
+            return; 
+        }
+
         if (isWin && hasPromptedThisSession) {
             const savedInitials = document.getElementById('initials-input').value.toUpperCase();
             
