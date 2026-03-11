@@ -1,26 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Trece</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23082308'/><text y='75' x='12' font-size='70' fill='%23d4af37' font-family='Georgia'>13</text></svg>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">    
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23082308'/><text y='75' x='12' font-size='70' fill='%23d4af37' font-family='Georgia'>13</text></svg>">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <div id="landing-page" class="overlay-base">
-    <div class="landing-content">
-        <div class="art-stack">
-            <h1 class="landing-title">Welcome to TRECE</h1>
-            <img src="trece-cover.jpg" alt="Trece Cards" class="hero-img">
-            <p class="landing-tagline">Where 13 is your lucky number.</p>
+        <div class="landing-content">
+            <div class="art-stack">
+                <h1 class="landing-title">Welcome to TRECE</h1>
+                <img src="trece-cover.jpg" alt="Trece Cards" class="hero-img">
+                <p class="landing-tagline">Where 13 is your lucky number.</p>
+            </div>
+            <div class="landing-actions">
+                <button id="start-game-btn" onclick="closeLanding()">DEAL HAND</button>
+                <a href="#" class="about-link" onclick="toggleDisplay(rulesModal, true)">HOW TO PLAY</a>
+            </div>
         </div>
-        <div class="landing-actions">
-            <button id="start-game-btn" onclick="closeLanding()">DEAL HAND</button>
-            <a href="#" class="about-link" onclick="openRules()">HOW TO PLAY</a>
-        </div>
-    </div>
     </div>
 
     <div id="scaler">
@@ -30,8 +34,9 @@
             <div class="big-stats">
                 <div class="stat-item"><span id="game-val">1</span><span class="stat-label">Game</span></div>
                 <div class="stat-item"><span id="score-val">0</span><span class="stat-label">Score</span></div>
-                <div class="stat-item"><span><span id="wins-val">0</span>/<span id="loss-val">0</span></span><span class="stat-label">Win/Loss</span></div>
-                <div class="stat-item" onclick="toggleOptions()" style="cursor:pointer;">
+                <div class="stat-item"><span><span id="wins-val">0</span>/<span id="loss-val">0</span></span><span
+                        class="stat-label">Win/Loss</span></div>
+                <div class="stat-item" onclick="toggleDisplay(optionsModal)" style="cursor:pointer;">
                     <span style="font-size: 1.2rem; color: var(--gold);">☰</span>
                     <span class="stat-label">Options</span>
                 </div>
@@ -46,9 +51,12 @@
         </div>
 
         <div id="game-board">
-            <div class="column" id="col-0"></div><div class="column" id="col-1"></div>
-            <div class="column" id="col-2"></div><div class="column" id="col-3"></div>
-            <div class="column" id="col-4"></div><div class="column" id="col-5"></div>
+            <div class="column" id="col-0"></div>
+            <div class="column" id="col-1"></div>
+            <div class="column" id="col-2"></div>
+            <div class="column" id="col-3"></div>
+            <div class="column" id="col-4"></div>
+            <div class="column" id="col-5"></div>
             <div class="column" id="col-6"></div>
         </div>
 
@@ -57,112 +65,145 @@
         </div>
     </div>
 
-<div class="modal-overlay" id="options-modal">
-    <div class="modal-box">
-        <h2 style="color:var(--gold); letter-spacing:2px; text-align: center; margin-bottom: 5px;">OPTIONS</h2>
-        <hr style="border: 0; border-top: 1px solid rgba(212,175,55,0.3); margin: 15px 0;">
-        
-        <button class="btn-primary" onclick="openRules(); toggleOptions();">📖 About the Game</button>
-        <button class="btn-primary" onclick="toggleTheme();">
-            <span id="theme-icon">🌙</span> Day/Night Mode
-        </button>
-        <button class="btn-primary" onclick="toggleFullscreen(); toggleOptions();">🖥️ Fullscreen</button>
+    <div class="modal-overlay" id="options-modal">
+        <div class="modal-box">
+            <h2 class="modal-header">OPTIONS</h2>
+            <hr class="modal-divider">
 
-        <div class="hand-row">
-            <button id="left-hand-btn" class="btn-primary" onclick="setHandedness('left')">LEFT HAND</button>
-            <button id="right-hand-btn" class="btn-primary" onclick="setHandedness('right')">RIGHT HAND</button>
+            <button class="btn-primary" onclick="toggleDisplay(rulesModal, true); toggleDisplay(optionsModal);">📖 About
+                the Game</button>
+            <button class="btn-primary" onclick="toggleTheme();">
+                <span id="theme-icon">🌙</span> Day/Night Mode
+            </button>
+            <button class="btn-primary" onclick="toggleFullscreen(); toggleDisplay(optionsModal);">🖥️
+                Fullscreen</button>
+
+            <div class="hand-row">
+                <button id="left-hand-btn" class="btn-primary" onclick="setHandedness('left')">LEFT HAND</button>
+                <button id="right-hand-btn" class="btn-primary" onclick="setHandedness('right')">RIGHT HAND</button>
+            </div>
+
+            <button onclick="openLeaderboard()" class="btn-primary">🏆 LEADERBOARD</button>
+
+            <button class="btn-primary btn-felt" onclick="toggleDisplay(optionsModal)">Back to Game</button>
         </div>
-
-        <button onclick="openLeaderboard()" class="btn-primary">🏆 LEADERBOARD</button>
-
-        <button class="btn-primary btn-felt" onclick="toggleOptions()">Back to Game</button>
     </div>
-</div>
 
-<div class="modal-overlay" id="rules-modal">
-    <div class="modal-box" style="text-align: left;">
-        <h1 style="text-align: center;">Welcome to Trece!</h1>
-        <p style="font-size: 0.85rem; text-align: center;">The solitaire game taking the world by storm!</p>
-        <h2 style="text-align: center;">THE HOUSE RULES</h2>
-        <p style="font-size: 0.85rem;"><strong>OBJECTIVE:</strong> Clear all columns by pairing cards totaling 13. Tap cards to pair them.</p>
-        <p style="font-size: 0.85rem;">- <strong>KINGS</strong>: 13 (just tap!).<br>- <strong>QUEENS</strong> (12)+ <strong>ACE</strong> (1).<br>- <strong>JACKS</strong> (11)+ 2.</p>
-        <p style="font-size: 0.85rem;">- <strong>SCORING:</strong> <br>- <strong>Win:</strong> + 5 points + number of cards left in the deck.<br>- <strong>Loss:</strong> - number of cards left on the table.</p>
-        <hr style="border: 0; border-top: 1px solid rgba(212,175,55,0.3); margin: 15px 0;">
-        <div style="background: rgba(212,175,55,0.1); padding: 10px; border-radius: 8px; border: 1px solid var(--gold); margin-bottom: 15px; text-align: center;">
-            <span style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Your All-Time Best Score</span>
-            <div id="modal-high-score" style="font-size: 2rem; color: var(--gold); font-weight: 900; text-shadow: var(--gold-glow);">0</div>
+    <div class="modal-overlay" id="rules-modal">
+        <div class="modal-box" style="text-align: left;">
+            <h1 class="text-center">About the Game</h1>
+
+            <div class="leaderboard-tabs" style="margin-top: 10px; margin-bottom: 15px;">
+                <button onclick="switchRulesTab('rules')" id="rules-tab-rules" class="tab-btn active">RULES</button>
+                <button onclick="switchRulesTab('scoring')" id="rules-tab-scoring" class="tab-btn">SCORING</button>
+                <button onclick="switchRulesTab('about')" id="rules-tab-about" class="tab-btn">ABOUT</button>
+            </div>
+
+            <!-- RULES TAB SECTION -->
+            <div id="tab-rules-content">
+                <p class="modal-text text-center">The solitaire game taking the world by storm!</p>
+                <h2 class="text-center">THE HOUSE RULES</h2>
+                <p class="modal-text"><strong>OBJECTIVE:</strong> Clear all columns by pairing cards totaling 13. Tap
+                    cards
+                    to pair them.</p>
+                <p class="modal-text">- <strong>KINGS</strong>: 13 (just tap!).<br>- <strong>QUEENS</strong> (12)+
+                    <strong>ACE</strong> (1).<br>- <strong>JACKS</strong> (11)+ 2.
+                </p>
+            </div>
+
+            <!-- SCORING TAB SECTION -->
+            <div id="tab-scoring-content" style="display: none;">
+                <p class="modal-text">- <strong>SCORING:</strong> <br>- <strong>Win:</strong> + 5 points + number of
+                    cards
+                    left in the deck.<br>- <strong>Loss:</strong> - number of cards left on the table.</p>
+                <hr class="modal-divider">
+                <div
+                    style="background: rgba(212,175,55,0.1); padding: 10px; border-radius: 8px; border: 1px solid var(--gold); margin-bottom: 15px; text-align: center;">
+                    <span style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Your All-Time Best
+                        Score</span>
+                    <div id="modal-high-score"
+                        style="font-size: 2rem; color: var(--gold); font-weight: 900; text-shadow: var(--gold-glow);">0
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABOUT TAB SECTION -->
+            <div id="tab-about-content" style="display: none;">
+                <p class="modal-text text-center" style="font-size: 1.0rem; font-style: italic; opacity: 0.8;">
+                    <br>Created by Scott Swanson.<br>Developed by Eric Swanson.<br>Tested by YOU ♥️ <br> © 2026
+                </p>
+
+                <div class="text-center" style="margin-top: 10px;">
+                    <a href="https://www.buymeacoffee.com/trece" target="_blank" class="support-btn">
+                        <span style="font-size: 1.2rem;">☕</span> Support the Developer
+                    </a>
+                    <p style="font-size: 0.8rem; opacity: 0.9; margin-top: 5px;">Help keep Trece ad-free and updated!
+                    </p>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="toggleDisplay(rulesModal, false)" style="margin-top: 15px;">Got
+                it</button>
         </div>
-        <p style="font-size: 0.85rem; text-align: center; font-style: italic; opacity: 0.8;">
-            Created by Scott Swanson. Developed by Eric Swanson.<br>Tested by YOU ♥️ <br> © 2026
-        </p>
-
-        <div style="text-align: center; margin-top: 10px;">
-            <a href="https://www.buymeacoffee.com/trece" target="_blank" 
-            style="text-decoration: none; background: #ffffff; color: #000000; width: 100%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: bold; cursor: pointer; padding: 12px 0; border-radius: 6px;">
-                <span style="font-size: 1.2rem;">☕</span> Support the Developer
-            </a>
-            <p style="font-size: 0.75rem; opacity: 0.9; margin-top: 5px;">Help keep Trece ad-free and updated!</p>
-        </div>
-
-        <button class="btn-primary" onclick="closeRules()">Got it</button>
     </div>
-</div>
 
-<div class="modal-overlay" id="end-modal">
-    <div class="modal-box">
-        <h2 id="end-title" style="color:var(--gold); letter-spacing:3px;"></h2>
-        <p id="end-comment" style="font-size: 1.8rem; font-style: italic; margin: 15px 0;"></p>
-        <p id="end-message" style="font-weight: bold; margin-bottom: 20px; color: var(--gold);"></p>
-        <button id="modal-deal-btn" class="btn-primary" onclick="initGame()">Deal Again</button>
-        <button onclick="viewBoard()" style="border:none; background:transparent; font-size:0.8rem; opacity:0.8; display:block; margin: 6px auto 0;">VIEW THE BOARD</button>
-        <div id="high-score-entry" style="display: none; margin-bottom: 20px; animation: scale-in 0.5s both;">
-            <h2 style="color: #ffdf00; text-shadow: 0 0 10px rgba(255,223,0,0.5);">NEW HIGH SCORE!</h2>
-            <p>Enter your initials to join the board:</p>
-            <div style="display: flex; justify-content: center; gap: 10px;">
-                <input type="text" id="initials-input" maxlength="3" 
-                    style="width: 80px; text-align: center; font-size: 1.5rem; background: rgba(0,0,0,0.3); color: var(--gold); border: 2px solid var(--gold); border-radius: 4px; text-transform: uppercase;">
-                <button id="submit-score-btn" class="shiny-gold-btn" style="padding: 5px 15px;">SUBMIT</button>
+    <div class="modal-overlay" id="end-modal">
+        <div class="modal-box">
+            <h2 id="end-title" style="color:var(--gold); letter-spacing:3px;"></h2>
+            <p id="end-comment" style="font-size: 1.8rem; font-style: italic; margin: 15px 0;"></p>
+            <p id="end-message" style="font-weight: bold; margin-bottom: 20px; color: var(--gold);"></p>
+            <button id="modal-deal-btn" class="btn-primary" onclick="initGame()">Deal Again</button>
+            <button onclick="toggleDisplay(endModal, false)" class="text-btn">VIEW THE BOARD</button>
+            <div id="high-score-entry" style="display: none; margin-bottom: 20px; animation: scale-in 0.5s both;">
+                <h2 class="high-score-entry-title">NEW HIGH SCORE!</h2>
+                <p>Enter your initials to join the board:</p>
+                <div class="high-score-input-container">
+                    <input type="text" id="initials-input" maxlength="3" class="high-score-input">
+                    <button id="submit-score-btn" class="shiny-gold-btn" style="padding: 5px 15px;">SUBMIT</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div id="leaderboard-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-box leaderboard-box">
-        <h1 class="gold-text">LEADERBOARD</h1>
-        
-        <div class="leaderboard-tabs">
-            <button onclick="loadLeaderboard('week')" id="tab-week" class="tab-btn active">WEEK</button>
-            <button onclick="loadLeaderboard('month')" id="tab-month" class="tab-btn">MONTH</button>
-            <button onclick="loadLeaderboard('year')" id="tab-year" class="tab-btn">YEAR</button>
-            <button onclick="loadLeaderboard('all')" id="tab-all" class="tab-btn">ALL-TIME</button>
-        </div>
+    <div id="leaderboard-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box leaderboard-box">
+            <h1 class="gold-text">LEADERBOARD</h1>
 
-        <div id="leaderboard-content">
-            <table class="leaderboard-table">
-                <thead>
-                    <tr>
-                        <th>RANK</th>
-                        <th>NAME</th>
-                        <th>SCORE</th>
-                    </tr>
-                </thead>
-                <tbody id="leaderboard-body">
+            <div class="leaderboard-tabs">
+                <button onclick="loadLeaderboard('week')" id="tab-week" class="tab-btn active">WEEK</button>
+                <button onclick="loadLeaderboard('month')" id="tab-month" class="tab-btn">MONTH</button>
+                <button onclick="loadLeaderboard('year')" id="tab-year" class="tab-btn">YEAR</button>
+                <button onclick="loadLeaderboard('all')" id="tab-all" class="tab-btn">ALL-TIME</button>
+            </div>
+
+            <div id="leaderboard-content">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>RANK</th>
+                            <th>NAME</th>
+                            <th>SCORE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
                     </tbody>
-            </table>
-            <div id="leaderboard-loader" style="display:none;">LOADING...</div>
-        </div>
+                </table>
+                <div id="leaderboard-loader" style="display:none;">LOADING...</div>
+            </div>
 
-        <div id="global-rank-footer" style="margin: 10px 0; font-size: 0.9rem; color: var(--gold); border-top: 1px solid rgba(212,175,55,0.2); padding-top: 10px; display: none;">
-            YOUR GLOBAL RANK: <span id="user-rank-val">--</span>
-        </div>
+            <div id="global-rank-footer"
+                style="margin: 10px 0; font-size: 0.9rem; color: var(--gold); border-top: 1px solid rgba(212,175,55,0.2); padding-top: 10px; display: none;">
+                YOUR GLOBAL RANK: <span id="user-rank-val">--</span>
+            </div>
 
-        <button onclick="closeLeaderboard()" class="modal-btn">CLOSE</button>
+            <button onclick="toggleDisplay(leaderboardModal, false)" class="modal-btn">CLOSE</button>
+        </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="script.js"></script>
 
 </body>
+
 </html>
