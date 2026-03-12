@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trece-v28'; // Change this number every time you push big changes
+const CACHE_NAME = 'trece-v29'; // Change this number every time you push big changes
 
 self.addEventListener('install', (event) => {
   // Force the waiting service worker to become the active service worker
@@ -6,8 +6,8 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-    // Claim any currently open tabs immediately
-    event.waitUntil(clients.claim());
+  // Claim any currently open tabs immediately
+  event.waitUntil(clients.claim());
 });
 
 self.addEventListener('fetch', (event) => {

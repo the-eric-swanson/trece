@@ -9,5 +9,6 @@ const CONFIG = {
     PEAK_SCORE: 0,
 
     // Flags
-    HAS_PROMPTED: false
+    HAS_PROMPTED: false,
+    GAME_MODE: 'rated' // 'rated' or 'casual'
 };

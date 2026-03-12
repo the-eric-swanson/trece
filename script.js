@@ -17,6 +17,34 @@ function getCryptoRandom(max) {
     return array[0] % max;
 }
 
+function selectMode(mode) {
+    CONFIG.GAME_MODE = mode;
+    const btnRated = document.getElementById('btn-mode-rated');
+    const btnCasual = document.getElementById('btn-mode-casual');
+    const desc = document.getElementById('mode-desc');
+    const badge = document.getElementById('mode-badge');
+
+    if (mode === 'rated') {
+        btnRated.className = 'btn-primary';
+        btnRated.style.cssText = 'flex:1;';
+        btnCasual.className = 'tab-btn';
+        btnCasual.style.cssText = 'flex:1; border: 1px solid var(--gold); background: transparent; color: var(--gold); padding: 10px; font-size: 1rem; border-radius: 6px; cursor: pointer;';
+        desc.innerHTML = 'Try your luck against the world.<br>Strict mode enabled.';
+        badge.innerText = 'RATED';
+        badge.style.color = 'var(--gold)';
+        badge.style.borderColor = 'var(--gold)';
+    } else {
+        btnCasual.className = 'btn-primary';
+        btnCasual.style.cssText = 'flex:1;';
+        btnRated.className = 'tab-btn';
+        btnRated.style.cssText = 'flex:1; border: 1px solid var(--gold); background: transparent; color: var(--gold); padding: 10px; font-size: 1rem; border-radius: 6px; cursor: pointer;';
+        desc.innerHTML = 'Just for fun! Beat your high score.<br>Scores not saved to leaderboard.';
+        badge.innerText = 'CASUAL';
+        badge.style.color = 'rgba(255,255,255,0.7)';
+        badge.style.borderColor = 'rgba(255,255,255,0.7)';
+    }
+}
+
 function closeLanding() {
     const landing = document.getElementById('landing-page');
     const scaler = document.getElementById('scaler');
@@ -30,11 +58,36 @@ function closeLanding() {
     // Now that the cards are already in place, we just fade the blur
     landing.style.transform = "translateY(-110%)";
     landing.style.opacity = "0";
+    landing.style.pointerEvents = "none";
     scaler.classList.add('active'); // Removes the blur
 
     setTimeout(() => {
         landing.style.display = 'none';
     }, 800);
+}
+
+function attemptRestart() {
+    if (roundEnded) {
+        initGame();
+        return;
+    }
+
+    // Check if they actually made a move.
+    // Length 24 deck + empty success slot = no moves.
+    const noMovesMade = (deck.length === 24 && successSlot.children.length === 0);
+
+    if (CONFIG.GAME_MODE === 'rated' && !noMovesMade) {
+        // Pause and show warning
+        toggleDisplay(document.getElementById('forfeit-modal'), true);
+    } else {
+        // Casual mode or no moves made yet -> free restart
+        initGame();
+    }
+}
+
+function confirmForfeit() {
+    toggleDisplay(document.getElementById('forfeit-modal'), false);
+    end(false); // Process the negative score
 }
 
 function initGame() {
@@ -454,7 +507,7 @@ function end(isWin) {
     }
 
     sessionScore += score;
-    if (sessionScore > highScore) {
+    if (CONFIG.GAME_MODE === 'rated' && sessionScore > highScore) {
         highScore = sessionScore;
         localStorage.setItem('treceHighScore', highScore);
     }
@@ -493,11 +546,13 @@ function end(isWin) {
 
     //Check leaderboard for first win of session
     if (isWin && !CONFIG.HAS_PROMPTED) {
-        checkLeaderboard(sessionScore);
-        return; // <--- MUST return here so checkLeaderboard can manage the modal
+        if (CONFIG.GAME_MODE === 'rated') {
+            checkLeaderboard(sessionScore);
+            return; // <--- MUST return here so checkLeaderboard can manage the modal
+        }
     }
 
-    if (isWin && CONFIG.HAS_PROMPTED) {
+    if (isWin && CONFIG.HAS_PROMPTED && CONFIG.GAME_MODE === 'rated') {
         // ONLY trigger the update/leaderboard if they set a new personal peak
         if (sessionScore > CONFIG.PEAK_SCORE) {
             CONFIG.PEAK_SCORE = sessionScore;

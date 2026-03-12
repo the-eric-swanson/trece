@@ -9,6 +9,10 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
@@ -16,12 +20,20 @@
     <div id="landing-page" class="overlay-base">
         <div class="landing-content">
             <div class="art-stack">
-                <h1 class="landing-title">Welcome to TRECE</h1>
+                <h1 class="landing-title">TRECE</h1>
                 <img src="trece-cover.jpg" alt="Trece Cards" class="hero-img">
                 <p class="landing-tagline">Where 13 is your lucky number.</p>
             </div>
+            <div class="mode-selection" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button id="btn-mode-rated" class="btn-primary" onclick="selectMode('rated')"
+                    style="flex:1;">RATED</button>
+                <button id="btn-mode-casual" class="tab-btn" onclick="selectMode('casual')"
+                    style="flex:1; border: 1px solid var(--gold); background: transparent; color: var(--gold); padding: 10px; font-size: 1rem; border-radius: 6px; cursor: pointer;">CASUAL</button>
+            </div>
+            <p id="mode-desc" style="font-size: 1.2rem; font-style: italic; margin-bottom: 20px; opacity: 0.9;">
+                Try your luck against the world.<br>Strict mode enabled.</p>
             <div class="landing-actions">
-                <button id="start-game-btn" onclick="closeLanding()">DEAL HAND</button>
+                <button id="start-game-btn" onclick="closeLanding()" style="width: 100%;">DEAL HAND</button>
                 <a href="#" class="about-link" onclick="toggleDisplay(rulesModal, true)">HOW TO PLAY</a>
             </div>
         </div>
@@ -30,7 +42,9 @@
     <div id="scaler">
         <div id="header">
             <h1>TRECE</h1>
-            <div id="deck-label-top">DECK: <span id="deck-count">24</span></div>
+            <div id="deck-label-top"><span id="mode-badge"
+                    style="color:var(--gold); font-size: 0.7em; margin-right: 10px; border: 1px solid var(--gold); padding: 2px 5px; border-radius: 4px; display: inline-block; vertical-align: middle;">RATED</span>
+                DECK: <span id="deck-count">24</span></div>
             <div class="big-stats">
                 <div class="stat-item"><span id="game-val">1</span><span class="stat-label">Game</span></div>
                 <div class="stat-item"><span id="score-val">0</span><span class="stat-label">Score</span></div>
@@ -61,7 +75,7 @@
         </div>
 
         <div class="bottom-controls">
-            <button id="board-deal-btn" class="shiny-gold-btn" onclick="initGame()">DEAL AGAIN</button>
+            <button id="board-deal-btn" class="shiny-gold-btn" onclick="attemptRestart()">DEAL AGAIN</button>
         </div>
     </div>
 
@@ -90,10 +104,10 @@
     </div>
 
     <div class="modal-overlay" id="rules-modal">
-        <div class="modal-box" style="text-align: left;">
+        <div class="modal-box" style="text-align: left; padding: 30px;">
             <h1 class="text-center">About the Game</h1>
 
-            <div class="leaderboard-tabs" style="margin-top: 10px; margin-bottom: 15px;">
+            <div class="leaderboard-tabs" style="margin-top: 10px; margin-bottom: 25px;">
                 <button onclick="switchRulesTab('rules')" id="rules-tab-rules" class="tab-btn active">RULES</button>
                 <button onclick="switchRulesTab('scoring')" id="rules-tab-scoring" class="tab-btn">SCORING</button>
                 <button onclick="switchRulesTab('about')" id="rules-tab-about" class="tab-btn">ABOUT</button>
@@ -101,49 +115,90 @@
 
             <!-- RULES TAB SECTION -->
             <div id="tab-rules-content">
-                <p class="modal-text text-center">The solitaire game taking the world by storm!</p>
-                <h2 class="text-center">THE HOUSE RULES</h2>
-                <p class="modal-text"><strong>OBJECTIVE:</strong> Clear all columns by pairing cards totaling 13. Tap
-                    cards
-                    to pair them.</p>
-                <p class="modal-text">- <strong>KINGS</strong>: 13 (just tap!).<br>- <strong>QUEENS</strong> (12)+
-                    <strong>ACE</strong> (1).<br>- <strong>JACKS</strong> (11)+ 2.
+                <p class="modal-text" style="line-height: 1.5;"><strong><u>OBJECTIVE:</u></strong>
+                    <br> Clear the table by pairing cards totaling 13.
+                    <br>Tap two cards to pair them.
+                    <br> Only one pass through the deck. Choose wisely!
                 </p>
+                <ul style="list-style: none; padding: 0; margin: 15px 0; line-height: 1.5; text-align: left;">
+                    <li style="margin-bottom: 10px;">
+                        <span style="color: var(--gold); margin-right: 8px;">♠</span>
+                        <strong>Kings</strong>: 13 (just tap!)
+                    </li>
+                    <li style="margin-bottom: 10px;">
+                        <span style="color: var(--suit-red); margin-right: 8px;">♥</span>
+                        <strong>Queens</strong> (12) + <strong>Aces</strong> (1).
+                    </li>
+                    <li style="margin-bottom: 10px;">
+                        <span style="color: var(--suit-red); margin-right: 8px;">♦</span>
+                        <strong>Jacks</strong> (11) + 2.
+                    </li>
+                    <li style="margin-bottom: 15px;">
+                        <span style="color: var(--gold); margin-right: 8px;">♣</span>
+                        Any other two cards that add up to 13.
+                    </li>
+                </ul>
             </div>
 
             <!-- SCORING TAB SECTION -->
             <div id="tab-scoring-content" style="display: none;">
-                <p class="modal-text">- <strong>SCORING:</strong> <br>- <strong>Win:</strong> + 5 points + number of
-                    cards
-                    left in the deck.<br>- <strong>Loss:</strong> - number of cards left on the table.</p>
+                <ul style="list-style: none; padding: 0; margin: 15px 0; line-height: 1.5; text-align: left;">
+                    <li style="margin-bottom: 10px;">
+                        <span style="color: var(--gold); margin-right: 8px;">♠</span>
+                        <strong>Win:</strong> + 5 points + cards left in the deck.
+                    </li>
+                    <li style="margin-bottom: 10px;">
+                        <span style="color: var(--suit-red); margin-right: 8px;">♥</span>
+                        <strong>Loss:</strong> - number of cards left on the table.
+                    </li>
+                    <li style="margin-bottom: 10px;">
+                        <span style="color: var(--suit-red); margin-right: 8px;">♦</span>
+                        <strong>Clean sweep:</strong> Clear the table with no cards in the discard pile. + 5 bonus
+                        points.
+                    </li>
+                    <li style="margin-bottom: 15px;">
+                        <span style="color: var(--gold); margin-right: 8px;">♣</span>
+                        <strong>Perfect game:</strong> Clear the table without drawing a single card. + 100 points!
+                    </li>
+                </ul>
+
                 <hr class="modal-divider">
+
                 <div
-                    style="background: rgba(212,175,55,0.1); padding: 10px; border-radius: 8px; border: 1px solid var(--gold); margin-bottom: 15px; text-align: center;">
-                    <span style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Your All-Time Best
-                        Score</span>
+                    style="background: rgba(212,175,55,0.1); padding: 15px; border-radius: 8px; border: 1px solid var(--gold); margin-bottom: 15px; text-align: center;">
+                    <span style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px;">Your
+                        All-Time Best Score</span>
                     <div id="modal-high-score"
-                        style="font-size: 2rem; color: var(--gold); font-weight: 900; text-shadow: var(--gold-glow);">0
-                    </div>
+                        style="font-size: 2.2rem; color: var(--gold); font-weight: 900; text-shadow: var(--gold-glow); margin-top: 5px;">
+                        0</div>
                 </div>
             </div>
 
             <!-- ABOUT TAB SECTION -->
-            <div id="tab-about-content" style="display: none;">
-                <p class="modal-text text-center" style="font-size: 1.0rem; font-style: italic; opacity: 0.8;">
-                    <br>Created by Scott Swanson.<br>Developed by Eric Swanson.<br>Tested by YOU ♥️ <br> © 2026
+            <div id="tab-about-content" style="display: none; margin-top: -5px;">
+                <p class="modal-text text-center"
+                    style="font-size: 1.0rem; font-style: italic; opacity: 0.8; line-height: 1.4; margin: 0 0 12px 0;">
+                    Created by Scott Swanson<br>
+                    Developed by Eric Swanson<br>
+                    Tested by YOU <span style="color: #d32f2f; font-style: normal;">♥️</span><br>
+                    <span style="font-size: 0.85rem; opacity: 0.6; font-style: normal;">© 2026</span>
                 </p>
 
+                <hr style="border: 0; border-top: 1px solid rgba(212,175,55,0.2); width: 70%; margin: 12px auto;">
+
                 <div class="text-center" style="margin-top: 10px;">
-                    <a href="https://www.buymeacoffee.com/trece" target="_blank" class="support-btn">
-                        <span style="font-size: 1.2rem;">☕</span> Support the Developer
+                    <a href="https://www.buymeacoffee.com/trece" target="_blank" class="buy-coffee-btn">
+                        <span>☕</span> SUPPORT TRECE!
                     </a>
-                    <p style="font-size: 0.8rem; opacity: 0.9; margin-top: 5px;">Help keep Trece ad-free and updated!
+                    <p
+                        style="font-size: 0.85rem; opacity: 0.8; margin-top: 12px; font-style: italic; margin-bottom: 5px;">
+                        Help keep Trece ad-free and updated!
                     </p>
                 </div>
             </div>
 
-            <button class="btn-primary" onclick="toggleDisplay(rulesModal, false)" style="margin-top: 15px;">Got
-                it</button>
+            <button class="btn-primary" onclick="toggleDisplay(rulesModal, false)" style="margin-top: 25px;">GOT
+                IT</button>
         </div>
     </div>
 
@@ -162,6 +217,20 @@
                     <button id="submit-score-btn" class="shiny-gold-btn" style="padding: 5px 15px;">SUBMIT</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="forfeit-modal" style="display: none;">
+        <div class="modal-box">
+            <h2 class="modal-header" style="color:var(--suit-red); letter-spacing:3px;">FORFEIT RATED GAME?</h2>
+            <hr class="modal-divider">
+            <p class="modal-text text-center" style="margin: 15px 0;">Giving up now will tally the cards remaining on
+                the board as a loss and affect your leaderboard ranking.</p>
+            <button id="confirm-forfeit-btn" class="btn-primary"
+                style="background: var(--suit-red); border-color: var(--suit-red); color: white;"
+                onclick="confirmForfeit()">FORFEIT GAME</button>
+            <button class="text-btn" onclick="toggleDisplay(document.getElementById('forfeit-modal'), false)">RESUME
+                GAME</button>
         </div>
     </div>
 
