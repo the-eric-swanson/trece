@@ -777,45 +777,51 @@ function triggerWinAnimation() {
 }
 
 function triggerLossAnimation(count = 20) {
-    console.log("🌑 Triggering The Shatter: Fragmenting cards...");
+    console.log("🌑 Triggering The Shatter: Purely decorative...");
 
-    // Target board cards to "shatter"
-    const boardCards = document.querySelectorAll('.column .card');
-    boardCards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        const fragmentCount = 12; // fragments per card
+    // Get z-index for animations
+    const style = getComputedStyle(document.documentElement);
+    const animZ = style.getPropertyValue('--z-animations').trim() || '12000';
 
-        for (let i = 0; i < fragmentCount; i++) {
-            const frag = document.createElement('div');
-            frag.innerHTML = ['♠', '♥', '♦', '♣'][Math.floor(Math.random() * 4)];
-            frag.style.cssText = `
-                position: fixed;
-                left: ${rect.left + rect.width / 2}px;
-                top: ${rect.top + rect.height / 2}px;
-                color: rgba(255, 255, 255, 0.8);
-                font-size: ${1 + Math.random() * 1.5}rem;
-                pointer-events: none;
-                z-index: ${zAnim};
-                filter: blur(1px);
-            `;
-            document.body.appendChild(frag);
+    // Spawn purely decorative "ghost fragments" that drift across the screen
+    // This leaves the actual board cards untouched for the "View Board" feature.
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            const fragmentCount = 5; // Fragments per "ghost card" event
+            const startX = Math.random() * window.innerWidth;
+            const startY = Math.random() * (window.innerHeight * 0.4); // Start in top half
 
-            const tx = (Math.random() - 0.5) * 400;
-            const ty = (Math.random() - 0.2) * 600; // Drifts downward more
-            const rot = (Math.random() - 0.5) * 720;
+            for (let j = 0; j < fragmentCount; j++) {
+                const frag = document.createElement('div');
+                frag.innerHTML = ['♠', '♥', '♦', '♣'][Math.floor(Math.random() * 4)];
+                frag.style.cssText = `
+                    position: fixed;
+                    left: ${startX}px;
+                    top: ${startY}px;
+                    color: rgba(255, 255, 255, 0.6);
+                    font-size: ${1 + Math.random() * 2}rem;
+                    pointer-events: none;
+                    z-index: ${animZ};
+                    filter: blur(1px);
+                    font-family: serif;
+                `;
+                document.body.appendChild(frag);
 
-            frag.animate([
-                { transform: 'translate(0, 0) rotate(0deg) scale(1)', opacity: 1 },
-                { transform: `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(0)`, opacity: 0 }
-            ], {
-                duration: 1500 + Math.random() * 1000,
-                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-            }).onfinish = () => frag.remove();
-        }
-        // Fade the actual card out
-        card.style.transition = "opacity 0.5s ease";
-        card.style.opacity = "0";
-    });
+                const tx = (Math.random() - 0.5) * 600;
+                const ty = window.innerHeight + 100; // Fall off screen
+                const rot = (Math.random() - 0.5) * 1080;
+
+                frag.animate([
+                    { transform: 'translate(0, 0) rotate(0deg) scale(1)', opacity: 0 },
+                    { transform: 'translate(0, 0) rotate(0deg) scale(1.2)', opacity: 0.8, offset: 0.1 },
+                    { transform: `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(0.5)`, opacity: 0 }
+                ], {
+                    duration: 2000 + Math.random() * 2000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => frag.remove();
+            }
+        }, i * 100);
+    }
 
     // Also keep the "rain" effect but make it more premium
     for (let i = 0; i < count; i++) {
