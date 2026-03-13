@@ -1021,7 +1021,9 @@ function showInitialsEntry(rank, timeframe) {
 async function submitScore() {
     const initialsInput = document.getElementById('initials-input');
     const initials = initialsInput.value.toUpperCase().trim();
-    if (initials.length !== 3) return alert("Enter 3 initials.");
+    if (!/^[A-Z0-9]{3}$/.test(initials)) {
+        return alert("Please enter exactly 3 letters or numbers.");
+    }
 
     CONFIG.PLAYER_INITIALS = initials;
     CONFIG.PEAK_SCORE = sessionScore;

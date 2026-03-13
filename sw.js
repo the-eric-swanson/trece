@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trece-v29'; // Change this number every time you push big changes
+const CACHE_NAME = 'trece-v30'; // Change this number every time you push big changes
 
 self.addEventListener('install', (event) => {
   // Force the waiting service worker to become the active service worker
