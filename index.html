@@ -34,7 +34,7 @@
                 Try your luck against the world.<br>Strict mode enabled.</p>
             <div class="landing-actions">
                 <button id="start-game-btn" onclick="closeLanding()" style="width: 100%;">DEAL HAND</button>
-                <a href="#" class="about-link" onclick="toggleDisplay(rulesModal, true)">HOW TO PLAY</a>
+                <a href="#" class="about-link" onclick="openRules()">HOW TO PLAY</a>
             </div>
         </div>
     </div>
@@ -84,7 +84,7 @@
             <h2 class="modal-header">OPTIONS</h2>
             <hr class="modal-divider">
 
-            <button class="btn-primary" onclick="toggleDisplay(rulesModal, true); toggleDisplay(optionsModal);">📖 About
+            <button class="btn-primary" onclick="openRules(); toggleDisplay(optionsModal);">📖 About
                 the Game</button>
             <button class="btn-primary" onclick="toggleTheme();">
                 <span id="theme-icon">🌙</span> Day/Night Mode
@@ -180,7 +180,7 @@
                     style="font-size: 1.0rem; font-style: italic; opacity: 0.8; line-height: 1.4; margin: 0 0 12px 0;">
                     Created by Scott Swanson<br>
                     Developed by Eric Swanson<br>
-                    Tested by YOU <span style="color: #d32f2f; font-style: normal;">♥️</span><br>
+                    Enjoyed by YOU <span style="color: #d32f2f; font-style: normal;">♥️</span><br>
                     <span style="font-size: 0.85rem; opacity: 0.6; font-style: normal;">© 2026</span>
                 </p>
 
@@ -194,6 +194,21 @@
                         style="font-size: 0.85rem; opacity: 0.8; margin-top: 12px; font-style: italic; margin-bottom: 5px;">
                         Help keep Trece ad-free and updated!
                     </p>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid rgba(212,175,55,0.2); width: 70%; margin: 12px auto;">
+
+                <div class="text-center" style="margin-top: 10px; opacity: 0.9;">
+                    <p style="font-size: 0.9rem; margin-bottom: 5px; color: var(--gold);"><strong>Privacy &
+                            Data</strong></p>
+                    <p style="font-size: 0.8rem; line-height: 1.4; padding: 0 10px; margin-bottom: 12px;">
+                        <strong>Privacy Note</strong>: Trece uses localStorage only to save your personal high score and
+                        theme preferences. No personal data is collected or sold. Leaderboard entries are tied to the
+                        3-letter initials you provide.
+                    </p>
+                    <button class="text-btn" onclick="resetProgress()"
+                        style="font-size: 0.75rem; color: var(--suit-red); opacity: 0.7;">RESET ALL LOCAL
+                        PROGRESS</button>
                 </div>
             </div>
 
@@ -217,6 +232,21 @@
                     <button id="submit-score-btn" class="shiny-gold-btn" style="padding: 5px 15px;">SUBMIT</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="pb-modal" style="display: none; z-index: 100000;">
+        <div class="modal-box"
+            style="background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%); border: 3px solid var(--gold); border-radius: 15px; padding: 40px; text-align: center; box-shadow: 0 0 50px rgba(212, 175, 55, 0.5);">
+            <div style="font-size: 5rem; margin-bottom: 15px; animation: pulse 2s infinite;">🏆</div>
+            <h1
+                style="color: var(--gold); font-family: 'Playfair Display', serif; letter-spacing: 2px; margin-bottom: 25px;">
+                NEW PERSONAL BEST!</h1>
+            <div id="pb-score-display"
+                style="font-size: 4rem; font-weight: 900; color: #fff; text-shadow: 0 0 20px var(--gold); margin-bottom: 30px;">
+                0</div>
+            <button class="btn-primary" onclick="toggleDisplay(document.getElementById('pb-modal'), false)"
+                style="width: 100%; padding: 15px; font-size: 1.2rem;">CONTINUE</button>
         </div>
     </div>
 

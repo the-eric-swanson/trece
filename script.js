@@ -8,7 +8,8 @@ let rulesModal, optionsModal, leaderboardModal, themeIcon;
 let lossTimer = null; // Tracks the pending "Game Over"
 let winTimer = null; // New variable to protect the victory trigger
 let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false, isLocked = false;
-let highScore = localStorage.getItem('treceHighScore') || 0; // Loads the high score from the user's device
+let highScore = parseInt(localStorage.getItem('treceHighScore')) || 0; // Loads the high score from the user's device
+CONFIG.PEAK_SCORE = highScore; // Sync the internal peak for leaderboard comparison
 const zAnim = getComputedStyle(document.documentElement).getPropertyValue('--z-animations').trim() || '12000';
 
 function getCryptoRandom(max) {
@@ -471,10 +472,12 @@ function end(isWin) {
 
     if (isWin) {
         wins++;
-        if (score >= 20) {
-            triggerWinAnimation(); // THe card waterfall
+        if (isC) {
+            triggerSweepAnimation();
+        } else if (score >= 20) {
+            triggerWinAnimation(); // The card waterfall
         } else if (score >= 10) {
-            triggerVortex(); // The New Medium Win Option
+            triggerVortex(); // The Vortex
         } else {
             const fireworkCount = Math.max(deck.length * 100, 20);
             triggerFireworks(isP ? 1000 : fireworkCount);
@@ -507,9 +510,11 @@ function end(isWin) {
     }
 
     sessionScore += score;
-    if (CONFIG.GAME_MODE === 'rated' && sessionScore > highScore) {
+    if (sessionScore > highScore) {
         highScore = sessionScore;
         localStorage.setItem('treceHighScore', highScore);
+        CONFIG.PEAK_SCORE = highScore;
+        triggerPersonalBestModal(highScore);
     }
 
     // --- TIERED MENTAL HEALTH BREAK LOGIC ---
@@ -611,8 +616,13 @@ function createAnimationDeck() {
     const redSuit = style.getPropertyValue('--suit-red').trim();
     const blackSuit = style.getPropertyValue('--suit-black').trim();
     const animZ = style.getPropertyValue('--z-animations').trim() || '12000';
-    const cardW = style.getPropertyValue('--card-w').trim();
-    const cardH = style.getPropertyValue('--card-h').trim();
+    const cardW = style.getPropertyValue('--card-w').trim() || '80px';
+    let cardH = style.getPropertyValue('--card-h').trim();
+
+    // Fallback for missing --card-h or when it's too skinny
+    if (!cardH || cardH === "") {
+        cardH = `calc(${cardW} * 1.25)`; // Stockier ratio for better mobile feel
+    }
 
     const suits = ['♠', '♥', '♦', '♣'];
     const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
@@ -667,69 +677,165 @@ function triggerVortex() {
 
 function triggerWinAnimation() {
     const { fullDeck, redSuit, blackSuit, animZ, cardW, cardH } = createAnimationDeck();
+    console.log("🌊 Smooth Waterfall with Gold Streamers...");
 
     fullDeck.forEach((data, i) => {
         setTimeout(() => {
             const card = document.createElement('div');
-            card.className = 'card';
-            card.style.position = 'fixed';
-            card.style.zIndex = animZ;
-            card.style.width = cardW;
-            card.style.height = cardH;
+            card.className = 'card face-up';
+            card.style.cssText = `
+                position: fixed;
+                z-index: ${animZ};
+                width: ${cardW} !important;
+                height: ${cardH} !important;
+                aspect-ratio: auto !important;
+                left: ${5 + Math.random() * 90}vw;
+                top: -200px;
+                background-color: white;
+                border: 2px solid #ccc;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 5px;
+                box-sizing: border-box;
+                font-family: 'Georgia', serif;
+                pointer-events: none;
+                opacity: 1;
+            `;
 
-            // Apply theme-aware colors
             const isRed = data.s === '♥' || data.s === '♦';
-            card.style.color = isRed ? redSuit : blackSuit;
-            card.dataset.suit = data.s;
+            const color = isRed ? redSuit : blackSuit;
 
-            card.innerHTML = `<div class="rank">${data.r}</div><div class="card-center-suit">${data.s}</div>`;
-            card.style.left = Math.random() * 90 + 'vw'; // Keep slightly away from edges
-            card.style.top = '-150px';
+            // Scaled font sizes for mobile compatibility
+            const cornerSize = "min(1.1rem, 3.2vw)";
+            const centerSize = "min(2.8rem, 9vw)";
+
+            card.innerHTML = `
+                <div style="font-size: ${cornerSize}; font-weight: bold; color: ${color}; line-height: 1;">${data.r}<br>${data.s}</div>
+                <div style="font-size: ${centerSize}; align-self: center; color: ${color};">${data.s}</div>
+                <div style="font-size: ${cornerSize}; font-weight: bold; color: ${color}; line-height: 1; transform: rotate(180deg);">${data.r}<br>${data.s}</div>
+            `;
+            card.style.overflow = "hidden"; // Prevent content from stretching card
             document.body.appendChild(card);
 
-            // Gravity Logic
-            let velocityY = 0, posY = -150;
-            const gravity = 0.6, bounce = -0.5, cH = parseFloat(cardH) || 128;
+            const duration = 3000 + Math.random() * 1500;
+            const drift = (Math.random() - 0.5) * 300;
+            const sway = (Math.random() - 0.5) * 50;
 
-            const anim = setInterval(() => {
-                velocityY += gravity;
-                posY += velocityY;
-                if (posY + cH > window.innerHeight) {
-                    posY = window.innerHeight - cH;
-                    velocityY *= bounce;
+            // Streamer creation logic
+            const createStreamer = () => {
+                const streamer = document.createElement('div');
+                streamer.style.cssText = `
+                    position: fixed;
+                    z-index: ${parseInt(animZ) - 1};
+                    width: 4px;
+                    height: 20px;
+                    background: linear-gradient(to top, rgba(255, 215, 0, 0), rgba(255, 215, 0, 0.8));
+                    pointer-events: none;
+                    border-radius: 2px;
+                `;
+                document.body.appendChild(streamer);
+
+                const rect = card.getBoundingClientRect();
+                const sx = rect.left + rect.width / 2;
+                const sy = rect.top + rect.height / 2;
+
+                streamer.style.left = `${sx}px`;
+                streamer.style.top = `${sy}px`;
+
+                streamer.animate([
+                    { transform: 'scaleY(1)', opacity: 1 },
+                    { transform: 'scaleY(4) translateY(50px)', opacity: 0 }
+                ], { duration: 800, easing: 'ease-out' }).onfinish = () => streamer.remove();
+            };
+
+            const streamerInterval = setInterval(() => {
+                if (!card.parentNode) {
+                    clearInterval(streamerInterval);
+                    return;
                 }
-                card.style.top = posY + 'px';
-                if (Math.abs(velocityY) < 0.3 && posY > window.innerHeight - (cH + 10)) {
-                    clearInterval(anim);
-                    setTimeout(() => {
-                        card.style.transition = "opacity 1.5s ease";
-                        card.style.opacity = "0";
-                        setTimeout(() => card.remove(), 1500);
-                    }, 1000);
-                }
-            }, 20);
-        }, i * 80); // Faster stagger for 52 cards
+                createStreamer();
+            }, 60);
+
+            // Smooth Falling Animation (no jerky rotation)
+            card.animate([
+                { transform: `translate(0, 0) rotate(0deg)`, opacity: 0 },
+                { transform: `translate(${sway}px, 200px) rotate(${(Math.random() - 0.5) * 10}deg)`, opacity: 1, offset: 0.1 },
+                { transform: `translate(${drift}px, ${window.innerHeight + 400}px) rotate(${(Math.random() - 0.5) * 20}deg)`, opacity: 1 }
+            ], {
+                duration: duration,
+                easing: 'cubic-bezier(0.42, 0, 0.58, 1)'
+            }).onfinish = () => {
+                card.remove();
+                clearInterval(streamerInterval);
+            };
+
+        }, i * 50);
     });
 }
 
 function triggerLossAnimation(count = 20) {
+    console.log("🌑 Triggering The Shatter: Fragmenting cards...");
+
+    // Target board cards to "shatter"
+    const boardCards = document.querySelectorAll('.column .card');
+    boardCards.forEach(card => {
+        const rect = card.getBoundingClientRect();
+        const fragmentCount = 12; // fragments per card
+
+        for (let i = 0; i < fragmentCount; i++) {
+            const frag = document.createElement('div');
+            frag.innerHTML = ['♠', '♥', '♦', '♣'][Math.floor(Math.random() * 4)];
+            frag.style.cssText = `
+                position: fixed;
+                left: ${rect.left + rect.width / 2}px;
+                top: ${rect.top + rect.height / 2}px;
+                color: rgba(255, 255, 255, 0.8);
+                font-size: ${1 + Math.random() * 1.5}rem;
+                pointer-events: none;
+                z-index: ${zAnim};
+                filter: blur(1px);
+            `;
+            document.body.appendChild(frag);
+
+            const tx = (Math.random() - 0.5) * 400;
+            const ty = (Math.random() - 0.2) * 600; // Drifts downward more
+            const rot = (Math.random() - 0.5) * 720;
+
+            frag.animate([
+                { transform: 'translate(0, 0) rotate(0deg) scale(1)', opacity: 1 },
+                { transform: `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(0)`, opacity: 0 }
+            ], {
+                duration: 1500 + Math.random() * 1000,
+                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+            }).onfinish = () => frag.remove();
+        }
+        // Fade the actual card out
+        card.style.transition = "opacity 0.5s ease";
+        card.style.opacity = "0";
+    });
+
+    // Also keep the "rain" effect but make it more premium
     for (let i = 0; i < count; i++) {
         setTimeout(() => {
             const drop = document.createElement('div');
             drop.className = 'firework';
             drop.innerText = ['♠', '♥', '♦', '♣'][Math.floor(Math.random() * 4)];
-            drop.style.cssText = `position:fixed; left:${Math.random() * 100}vw; top:-50px; color:rgba(255,255,255,0.6); font-size:2.5rem; pointer-events:none; z-index:${zAnim};`;
+            drop.style.cssText = `position:fixed; left:${Math.random() * 100}vw; top:-50px; color:rgba(255,255,255,0.4); font-size:2rem; pointer-events:none; z-index:${zAnim}; font-family:serif;`;
             document.body.appendChild(drop);
 
             drop.animate([
-                { transform: 'translateY(0)', opacity: 0.9 },
-                { transform: `translateY(${window.innerHeight + 50}px)`, opacity: 0.1 }
-            ], { duration: 2500, easing: 'linear' }).onfinish = () => drop.remove();
-        }, i * 100); // Shorter interval for heavy rain
+                { transform: 'translateY(0) rotate(0deg)', opacity: 0.6 },
+                { transform: `translateY(${window.innerHeight + 50}px) rotate(360deg)`, opacity: 0 }
+            ], { duration: 2000 + Math.random() * 1000, easing: 'linear' }).onfinish = () => drop.remove();
+        }, i * (500 / count));
     }
 }
 
 function triggerLightning() {
+    console.log("⚡ Enhancing Lightning with screen-shaking...");
     const flash = document.createElement('div');
     const isMidnight = document.body.classList.contains('midnight-mode');
     const flashColor = isMidnight ? "#1a2c4e" : "#fffdf5";
@@ -737,50 +843,64 @@ function triggerLightning() {
 
     document.body.appendChild(flash);
 
-    // Multi-strike pattern: Strike 1 (Fast), Gap, Strike 2 (Stronger)
+    // Tiered Screen-Shake (if lightning is called, we want impact)
+    document.body.animate([
+        { transform: 'translate(0,0)' },
+        { transform: 'translate(-10px, 10px)' },
+        { transform: 'translate(10px, -10px)' },
+        { transform: 'translate(-5px, -5px)' },
+        { transform: 'translate(5px, 5px)' },
+        { transform: 'translate(0,0)' }
+    ], { duration: 200, iterations: 2 });
+
     flash.animate([
         { opacity: 0, offset: 0 },
-        { opacity: 0.5, offset: 0.1 },  // First quick burst
-        { opacity: 0, offset: 0.2 },    // Back to dark
-        { opacity: 0, offset: 0.3 },    // Pause...
-        { opacity: 0.8, offset: 0.4 },  // Big main strike
-        { opacity: 0, offset: 1.0 }     // Fade out slowly
+        { opacity: 0.6, offset: 0.1 },
+        { opacity: 0, offset: 0.2 },
+        { opacity: 0, offset: 0.3 },
+        { opacity: 0.9, offset: 0.4 },  // Main strike
+        { opacity: 0, offset: 1.0 }
     ], {
-        duration: 600,
+        duration: 700,
         easing: 'ease-out'
     }).onfinish = () => flash.remove();
 }
 
 function triggerFireworks(count) {
+    console.log(`🎇 Launching ${count} Enriched Fireworks...`);
     const colors = getThemeColors();
-    const palette = [colors.gold, '#ffffff', colors.red];
+    const palette = [colors.gold, '#ffffff', colors.red, '#ff00ff', '#00ffff'];
+
     for (let i = 0; i < count; i++) {
-        const f = document.createElement('div');
-        f.className = 'firework';
-        f.style.zIndex = zAnim;
-        f.innerText = ['♠', '♥', '♦', '♣'][getCryptoRandom(4)];
-        f.style.color = palette[getCryptoRandom(3)];
-        f.style.left = '50vw';
-        f.style.top = '50vh';
+        setTimeout(() => {
+            const f = document.createElement('div');
+            f.className = 'firework';
+            f.style.zIndex = zAnim;
+            f.innerText = ['♠', '♥', '♦', '♣'][getCryptoRandom(4)];
+            f.style.color = palette[getCryptoRandom(palette.length)];
+            f.style.left = '50vw';
+            f.style.top = '50vh';
+            f.style.textShadow = `0 0 10px ${f.style.color}, 0 0 20px ${f.style.color}`;
 
-        // Center the element on its coordinates and start invisible
-        f.style.transform = 'translate(-50%, -50%)';
-        f.style.opacity = '0';
+            // Center the element
+            f.style.transform = 'translate(-50%, -50%) scale(0)';
+            f.style.opacity = '1';
 
-        document.body.appendChild(f);
+            document.body.appendChild(f);
 
-        const a = Math.random() * Math.PI * 2;
-        const d = Math.random() * 600;
+            const a = Math.random() * Math.PI * 2;
+            const d = 150 + Math.random() * 500;
+            const dur = 1000 + Math.random() * 800;
 
-        f.animate([
-            { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
-            { transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d}px)) scale(0)`, opacity: 0 }
-        ], {
-            duration: 1500 + Math.random() * 1000,
-            fill: 'forwards'
-        });
-
-        setTimeout(() => f.remove(), 2500);
+            f.animate([
+                { transform: 'translate(-50%, -50%) scale(0.5)', opacity: 1 },
+                { transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d}px)) scale(2.5)`, opacity: 0 }
+            ], {
+                duration: dur,
+                easing: 'cubic-bezier(0, 0.55, 0.45, 1)',
+                fill: 'forwards'
+            }).onfinish = () => f.remove();
+        }, Math.random() * 500);
     }
 }
 
@@ -1134,4 +1254,131 @@ window.onload = () => {
     });
 
     initGame();
+}
+
+/**
+ * Recovered Features: Sweep Animation, PB Modal, and Reset Progress
+ */
+
+function triggerSweepAnimation() {
+    console.log("🧹 Triggering 52-card Face-Up Ghost Deck Sweep...");
+
+    // 1. Create a container for the ghost cards to keep them isolated
+    const container = document.createElement('div');
+    container.id = 'sweep-container';
+    container.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 20000;
+        overflow: hidden;
+    `;
+    document.body.appendChild(container);
+
+    const cardCount = 52;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const centerX = vw / 2;
+    const centerY = vh / 2;
+
+    const ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+    const suits = ['♠', '♥', '♦', '♣'];
+
+    // 2. Generate and splay the ghost cards
+    for (let i = 0; i < cardCount; i++) {
+        const card = document.createElement('div');
+        const rank = ranks[i % 13];
+        const suit = suits[Math.floor(i / 13)];
+        const isRed = (suit === '♥' || suit === '♦');
+
+        card.className = 'card ghost-card face-up';
+        card.innerHTML = `
+            <div class="card-top-left" style="position:absolute; top:5px; left:5px; line-height:1; pointer-events:none;">
+                <div style="font-size:12px; font-weight:bold;">${rank}</div>
+                <div style="font-size:12px;">${suit}</div>
+            </div>
+            <div class="card-center" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:32px; pointer-events:none;">${suit}</div>
+            <div class="card-bottom-right" style="position:absolute; bottom:5px; right:5px; line-height:1; transform:rotate(180deg); pointer-events:none;">
+                <div style="font-size:12px; font-weight:bold;">${rank}</div>
+                <div style="font-size:12px;">${suit}</div>
+            </div>
+        `;
+
+        card.style.cssText = `
+            position: absolute;
+            width: 80px;
+            height: 120px;
+            background-color: white;
+            color: ${isRed ? '#d32f2f' : '#000'};
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            left: 50%;
+            top: 50%;
+            margin-left: -40px;
+            margin-top: -60px;
+            transition: transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.8s ease;
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Georgia', serif;
+        `;
+
+        container.appendChild(card);
+
+        // Horizontal Fan Arc
+        const angleStep = 120 / (cardCount - 1); // 120 degree spread
+        const angle = -60 + (i * angleStep);
+        const rad = (angle * Math.PI) / 180;
+        const radius = Math.min(vw, vh) * 0.6; // Wider radius for the 52 cards
+
+        const tx = Math.sin(rad) * radius * 0.8; // Flatten slightly horizontally
+        const ty = -Math.cos(rad) * radius * 0.4; // Flatten vertically
+
+        // Phase 1: Splay out
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = `translate(${tx}px, ${ty}px) rotate(${angle}deg) scale(0.9)`;
+            }, i * 20); // Quick stagger
+        });
+
+        // Phase 2: Graceful Sweep Left
+        setTimeout(() => {
+            card.style.transition = "transform 1.8s cubic-bezier(0.4, 0, 1, 1), opacity 1.2s ease-in";
+            // Accelerate horizontally to the left
+            card.style.transform = `translate(${tx - vw * 1.5}px, ${ty + vh * 0.2}px) rotate(${angle - 180}deg)`;
+            card.style.opacity = '0';
+        }, 3500 + (i * 15)); // Longer hold for the massive splay
+    }
+
+    // 3. Cleanup the container after animation
+    setTimeout(() => {
+        container.remove();
+    }, 8000);
+}
+
+// Ensure it's globally available for console debugging
+window.triggerSweepAnimation = triggerSweepAnimation;
+
+function triggerPersonalBestModal(score) {
+    const pbModal = document.getElementById('pb-modal');
+    const pbScoreDisplay = document.getElementById('pb-score-display');
+    if (pbModal && pbScoreDisplay) {
+        pbScoreDisplay.innerText = score;
+        setTimeout(() => {
+            pbModal.style.display = 'flex';
+        }, 1200);
+    }
+}
+
+function resetProgress() {
+    if (confirm("Are you sure you want to reset ALL progress? This will clear your high score and settings.")) {
+        localStorage.clear();
+        window.location.reload();
+    }
 }
