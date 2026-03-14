@@ -30,7 +30,7 @@ function selectMode(mode) {
         btnRated.style.cssText = 'flex:1;';
         btnCasual.className = 'tab-btn';
         btnCasual.style.cssText = 'flex:1; border: 1px solid var(--gold); background: transparent; color: var(--gold); padding: 10px; font-size: 1rem; border-radius: 6px; cursor: pointer;';
-        desc.innerHTML = 'Try your luck against the world.<br>Strict mode enabled.';
+        desc.innerHTML = 'Try your luck against the world.<br/>Strict mode enabled.';
         badge.innerText = 'RATED';
         badge.style.color = 'var(--gold)';
         badge.style.borderColor = 'var(--gold)';
@@ -39,7 +39,7 @@ function selectMode(mode) {
         btnCasual.style.cssText = 'flex:1;';
         btnRated.className = 'tab-btn';
         btnRated.style.cssText = 'flex:1; border: 1px solid var(--gold); background: transparent; color: var(--gold); padding: 10px; font-size: 1rem; border-radius: 6px; cursor: pointer;';
-        desc.innerHTML = 'Just for fun! Beat your high score.<br>Scores not saved to leaderboard.';
+        desc.innerHTML = 'Just for fun! Beat your high score.<br/>Scores not saved to leaderboard.';
         badge.innerText = 'CASUAL';
         badge.style.color = 'rgba(255,255,255,0.7)';
         badge.style.borderColor = 'rgba(255,255,255,0.7)';
@@ -432,7 +432,7 @@ function updateEndModalUI(isP, isC, isWin, score, msg, breakMessage, coffeeButto
     lossVal.innerText = losses;
     endTitle.innerText = isP ? "PERFECT!" : (isC ? "CLEAN SWEEP!" : (isWin ? "VICTORY" : "GAME OVER"));
     endComment.innerText = getComment(score, isWin);
-    endMessage.innerHTML = `${msg}${breakMessage ? `<br>${breakMessage}` : ""}`;
+    endMessage.innerHTML = `${msg}${breakMessage ? `<br/>${breakMessage}` : ""}`;
 
     // 4. Handle Support Button
     const oldBtn = modalBox.querySelector('.support-btn-container');
@@ -472,7 +472,10 @@ function end(isWin) {
 
     if (isWin) {
         wins++;
-        if (isC) {
+        if (isP) {
+            triggerFireworks(1000);
+            triggerPerfectAnimation();
+        } else if (isC) {
             triggerSweepAnimation();
         } else if (score >= 20) {
             triggerWinAnimation(); // The card waterfall
@@ -480,7 +483,7 @@ function end(isWin) {
             triggerVortex(); // The Vortex
         } else {
             const fireworkCount = Math.max(deck.length * 100, 20);
-            triggerFireworks(isP ? 1000 : fireworkCount);
+            triggerFireworks(fireworkCount);
         }
     }
     else {
@@ -491,7 +494,7 @@ function end(isWin) {
         }
         else if (score > -10) {
             const cardsLeft = Math.abs(score);
-            triggerLossAnimation(cardsLeft * 10);
+            triggerLossAnimation(cardsLeft * 3);
         }
         else {
             triggerLossAnimation(100);
@@ -513,7 +516,6 @@ function end(isWin) {
     if (sessionScore > highScore) {
         highScore = sessionScore;
         localStorage.setItem('treceHighScore', highScore);
-        CONFIG.PEAK_SCORE = highScore;
         triggerPersonalBestModal(highScore);
     }
 
@@ -560,17 +562,17 @@ function end(isWin) {
     if (isWin && CONFIG.HAS_PROMPTED && CONFIG.GAME_MODE === 'rated') {
         // ONLY trigger the update/leaderboard if they set a new personal peak
         if (sessionScore > CONFIG.PEAK_SCORE) {
-            CONFIG.PEAK_SCORE = sessionScore;
 
             supabaseClient
                 .from('leaderboard')
                 .upsert({
                     session_id: CONFIG.SESSION_ID,
                     initials: CONFIG.PLAYER_INITIALS,
-                    score: CONFIG.PEAK_SCORE
+                    score: sessionScore
                 }, { onConflict: 'session_id' })
                 .then(({ error }) => {
                     if (!error) {
+                        CONFIG.PEAK_SCORE = sessionScore;
                         console.log("🚀 New Peak! Showing the board.");
                         // Only show the board now that we've actually moved up
                         setTimeout(openLeaderboard, 1000);
@@ -713,9 +715,9 @@ function triggerWinAnimation() {
             const centerSize = "min(2.8rem, 9vw)";
 
             card.innerHTML = `
-                <div style="font-size: ${cornerSize}; font-weight: bold; color: ${color}; line-height: 1;">${data.r}<br>${data.s}</div>
+                <div style="font-size: ${cornerSize}; font-weight: bold; color: ${color}; line-height: 1;">${data.r}<br/>${data.s}</div>
                 <div style="font-size: ${centerSize}; align-self: center; color: ${color};">${data.s}</div>
-                <div style="font-size: ${cornerSize}; font-weight: bold; color: ${color}; line-height: 1; transform: rotate(180deg);">${data.r}<br>${data.s}</div>
+                <div style="font-size: ${cornerSize}; font-weight: bold; color: ${color}; line-height: 1; transform: rotate(180deg);">${data.r}<br/>${data.s}</div>
             `;
             card.style.overflow = "hidden"; // Prevent content from stretching card
             document.body.appendChild(card);
@@ -1011,7 +1013,7 @@ function showInitialsEntry(rank, timeframe) {
     const messageDisplay = entryArea.querySelector('p');
 
     // Updated line to include the score value
-    messageDisplay.innerHTML = `You got the ${rank !== 1 ? rankWord + ' ' : ''}highest score ${timeframe}!<br>` +
+    messageDisplay.innerHTML = `You got the ${rank !== 1 ? rankWord + ' ' : ''}highest score ${timeframe}!<br/>` +
         `<span style="font-size: 1.4rem; color: #fff;">${sessionScore} POINTS</span>`;
 
     entryArea.style.display = 'block';
@@ -1372,6 +1374,149 @@ function triggerSweepAnimation() {
 
 // Ensure it's globally available for console debugging
 window.triggerSweepAnimation = triggerSweepAnimation;
+
+function triggerPerfectAnimation() {
+    console.log("💎 Triggering The Monumental 13...");
+    const { fullDeck, redSuit, blackSuit, animZ, cardW, cardH } = createAnimationDeck();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const isMobile = vw < 600 || vh < 550;
+    const isLandscape = vw > vh;
+    const isDesktop = vw > 1200;
+
+    // Adaptive scaling to prevent landscape clipping & desktop cramping
+    let yLimit = Math.min(vw, vh) * (isMobile ? 0.35 : 0.32);
+    if (isLandscape && vh < 550) yLimit = vh * 0.3; // More vertical clearance
+
+    let spaceFactor = 0.16;
+    if (isDesktop) spaceFactor = 0.24; // Just a smidge more room
+    else if (isMobile) {
+        spaceFactor = isLandscape ? 0.15 : 0.22; // Tighten landscape, keep portrait
+    }
+    const spacingX = vw * spaceFactor;
+
+    const cardScale = (isLandscape && vh < 550) ? 0.7 : 0.9;
+    const fontScale = cardScale / 0.9;
+
+    fullDeck.forEach((data, i) => {
+        const card = document.createElement('div');
+        card.className = 'card face-up';
+        card.style.cssText = `
+            position: fixed;
+            z-index: ${animZ};
+            width: ${cardW} !important;
+            height: ${cardH} !important;
+            left: 50vw;
+            top: 50vh;
+            margin-left: calc(${cardW} / -2);
+            margin-top: calc(${cardH} / -2);
+            background-color: white;
+            border: 2px solid var(--gold);
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5px;
+            box-sizing: border-box;
+            font-family: 'Georgia', serif;
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(0) rotate(0deg);
+        `;
+
+        const isRed = data.s === '♥' || data.s === '♦';
+        const color = isRed ? redSuit : blackSuit;
+        const cornerSize = isMobile ? `${0.8 * fontScale}rem` : `${1.1 * fontScale}rem`;
+        const centerSize = isMobile ? `${2.2 * fontScale}rem` : `${2.8 * fontScale}rem`;
+        card.innerHTML = `
+            <div style="font-size: ${cornerSize}; font-weight: bold; color: ${color}; line-height: 1;">${data.r}<br/>${data.s}</div>
+            <div style="font-size: ${centerSize}; align-self: center; color: ${color};">${data.s}</div>
+            <div style="font-size: ${cornerSize}; font-weight: bold; color: ${color}; line-height: 1; transform: rotate(180deg);">${data.r}<br/>${data.s}</div>
+        `;
+        document.body.appendChild(card);
+
+        let tx, ty, rot;
+
+        if (i < 22) {
+            // THE "1" - Strict alignment to yLimit
+            tx = -spacingX;
+            if (i < 4) {
+                // Hook
+                const hookIdx = 4 - i; // 4, 3, 2, 1
+                tx -= hookIdx * (vw * 0.02 * (cardScale / 0.9));
+                ty = -yLimit + (4 - hookIdx) * (vh * 0.02 * (cardScale / 0.9));
+                rot = -30;
+            } else if (i < 18) {
+                // Stem
+                const stemIdx = i - 4; // 0 to 13
+                ty = -yLimit + (stemIdx / 13) * (2 * yLimit);
+                rot = 0;
+            } else {
+                // Base
+                const baseIdx = i - 18;
+                tx += (baseIdx - 1.5) * (vw * 0.04 * (cardScale / 0.9));
+                ty = yLimit;
+                rot = 0;
+            }
+        } else {
+            // THE "3" - Mathematical two-arc construction
+            const idx = i - 22;
+            const isTop = idx < 15;
+            const subIdx = isTop ? idx : idx - 15;
+
+            const r = yLimit / 2;
+            const cx = spacingX;
+            const cy = isTop ? -r : r;
+
+            // Top Arc: 1.1PI sweep clockwise to 2.5PI (Middle fork)
+            // Bottom Arc: 1.5PI (Middle fork) sweep clockwise to 2.9PI
+            const angle = isTop ?
+                Math.PI * (1.1 + (subIdx / 14) * 1.4) :
+                Math.PI * (1.5 + (subIdx / 14) * 1.4);
+
+            tx = cx + Math.cos(angle) * r;
+            ty = cy + Math.sin(angle) * r;
+            rot = (angle * 180 / Math.PI) + 90;
+        }
+
+        // Phase 1: Fly to position
+        card.animate([
+            { transform: 'scale(0) rotate(720deg)', opacity: 0 },
+            { transform: `translate(${tx}px, ${ty}px) scale(${cardScale}) rotate(${rot}deg)`, opacity: 1 }
+        ], {
+            duration: 1000,
+            delay: i * 25,
+            easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+            fill: 'forwards'
+        });
+
+        // Phase 2: Premium Golden Glow (Continuous)
+        setTimeout(() => {
+            card.animate([
+                { filter: 'brightness(1) contrast(1) drop-shadow(0 0 0 gold)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.6)' },
+                { filter: 'brightness(1.5) contrast(1.2) drop-shadow(0 0 20px gold)', boxShadow: '0 0 40px rgba(212, 175, 55, 1)', offset: 0.5 },
+                { filter: 'brightness(1) contrast(1) drop-shadow(0 0 0 gold)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.6)' }
+            ], {
+                duration: 2000,
+                iterations: Infinity,
+                easing: 'ease-in-out' // Fixed 'separate' to 'ease-in-out'
+            });
+        }, 1200 + (i * 25));
+
+        // Phase 3: Explosive Exit
+        setTimeout(() => {
+            card.animate([
+                { transform: `translate(${tx}px, ${ty}px) scale(${cardScale}) rotate(${rot}deg)`, opacity: 1 },
+                { transform: `translate(${tx * 5}px, ${ty * 5}px) scale(0) rotate(${rot + 1080}deg)`, opacity: 0 }
+            ], {
+                duration: 1200,
+                easing: 'ease-in',
+                fill: 'forwards'
+            }).onfinish = () => card.remove();
+        }, 7000 + (i * 15)); // Extended hold time to 7s
+    });
+}
 
 function triggerPersonalBestModal(score) {
     const pbModal = document.getElementById('pb-modal');
