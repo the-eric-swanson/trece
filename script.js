@@ -551,6 +551,34 @@ function end(isWin) {
     // --- UI UPDATE & MODAL DISPLAY ---
     updateEndModalUI(isP, isC, isWin, score, msg, breakMessage, coffeeButtonHTML);
 
+    // --- LOCKOUT ENFORCEMENT ---
+    if (cooldown > 0) {
+        isLocked = true;
+        const mBtn = modalDealBtn;
+        const bBtn = boardDealBtn;
+
+        // Disable both buttons immediately
+        mBtn.disabled = bBtn.disabled = true;
+
+        let rem = cooldown;
+        // Set initial text for both
+        mBtn.innerText = bBtn.innerText = `WAIT (${rem}S)`;
+
+        const timer = setInterval(() => {
+            rem--;
+            // Update both buttons every second
+            mBtn.innerText = bBtn.innerText = `WAIT (${rem}S)`;
+
+            if (rem <= 0) {
+                clearInterval(timer);
+                isLocked = false;
+                mBtn.disabled = bBtn.disabled = false;
+                // Restore original labels
+                mBtn.innerText = bBtn.innerText = "DEAL AGAIN";
+            }
+        }, 1000);
+    }
+
     //Check leaderboard for first win of session
     if (isWin && !CONFIG.HAS_PROMPTED) {
         if (CONFIG.GAME_MODE === 'rated') {
@@ -581,35 +609,7 @@ function end(isWin) {
         }
     }
 
-
     endModal.style.display = 'flex';
-
-    if (cooldown > 0) {
-        isLocked = true;
-        const mBtn = modalDealBtn;
-        const bBtn = boardDealBtn;
-
-        // Disable both buttons immediately
-        mBtn.disabled = bBtn.disabled = true;
-
-        let rem = cooldown;
-        // Set initial text for both
-        mBtn.innerText = bBtn.innerText = `WAIT (${rem}S)`;
-
-        const timer = setInterval(() => {
-            rem--;
-            // Update both buttons every second
-            mBtn.innerText = bBtn.innerText = `WAIT (${rem}S)`;
-
-            if (rem <= 0) {
-                clearInterval(timer);
-                isLocked = false;
-                mBtn.disabled = bBtn.disabled = false;
-                // Restore original labels
-                mBtn.innerText = bBtn.innerText = "DEAL AGAIN";
-            }
-        }, 1000);
-    }
 }
 
 // Helper function for building the decks used in victory animations
