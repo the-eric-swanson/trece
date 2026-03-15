@@ -1663,12 +1663,12 @@ function toggleDiscardReviewUI(show) {
 
             const prevBtn = document.createElement('div');
             prevBtn.className = 'review-nav-btn';
-            prevBtn.innerHTML = '◀️';
+            prevBtn.innerHTML = '&#9664;'; // Standard Unicode LEFT-POINTING TRIANGLE
             prevBtn.onclick = (e) => { e.stopPropagation(); reviewPrev(); };
 
             const nextBtn = document.createElement('div');
             nextBtn.className = 'review-nav-btn';
-            nextBtn.innerHTML = '▶️';
+            nextBtn.innerHTML = '&#9654;'; // Standard Unicode RIGHT-POINTING TRIANGLE
             nextBtn.onclick = (e) => { e.stopPropagation(); reviewNext(); };
 
             container.appendChild(prevBtn);
