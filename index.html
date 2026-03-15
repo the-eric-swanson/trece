@@ -84,22 +84,13 @@
             <h2 class="modal-header">OPTIONS</h2>
             <hr class="modal-divider">
 
-            <button class="btn-primary" onclick="openRules(); toggleDisplay(optionsModal);">📖 About
+            <button class="btn-primary" onclick="openRules(); toggleDisplay(optionsModal, false);">📖 About
                 the Game</button>
-            <button class="btn-primary" onclick="toggleTheme();">
-                <span id="theme-icon">🌙</span> Day/Night Mode
-            </button>
-            <button class="btn-primary" onclick="toggleFullscreen(); toggleDisplay(optionsModal);">🖥️
-                Fullscreen</button>
-
-            <div class="hand-row">
-                <button id="left-hand-btn" class="btn-primary" onclick="setHandedness('left')">LEFT HAND</button>
-                <button id="right-hand-btn" class="btn-primary" onclick="setHandedness('right')">RIGHT HAND</button>
-            </div>
+            <button class="btn-primary" onclick="openSettings(); toggleDisplay(optionsModal, false);">⚙️ Settings</button>
 
             <button onclick="openLeaderboard()" class="btn-primary">🏆 LEADERBOARD</button>
 
-            <button class="btn-primary btn-felt" onclick="toggleDisplay(optionsModal)">Back to Game</button>
+            <button class="btn-primary btn-felt" onclick="toggleDisplay(optionsModal, false)">Back to Game</button>
         </div>
     </div>
 
@@ -264,6 +255,28 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="settings-modal" style="display: none;">
+        <div class="modal-box">
+            <h2 class="modal-header">SETTINGS</h2>
+            <hr class="modal-divider">
+
+            <button class="btn-primary" onclick="toggleAnimations();">
+                <span id="anim-icon">✨</span> Animations: <span id="anim-status">ON</span>
+            </button>
+            <button class="btn-primary" onclick="toggleTheme();">
+                <span id="theme-icon-settings">🌙</span> Day/Night Mode
+            </button>
+            <button class="btn-primary" onclick="toggleFullscreen();">🖥️ Fullscreen</button>
+
+            <div class="hand-row">
+                <button id="left-hand-btn" class="btn-primary" onclick="setHandedness('left')">👈 LEFT HAND</button>
+                <button id="right-hand-btn" class="btn-primary" onclick="setHandedness('right')">👉 RIGHT HAND</button>
+            </div>
+
+            <button class="btn-primary btn-felt" onclick="toggleDisplay(settingsModal, false)">Done</button>
+        </div>
+    </div>
+
     <div id="leaderboard-modal" class="modal-overlay" style="display: none;">
         <div class="modal-box leaderboard-box">
             <h1 class="gold-text">LEADERBOARD</h1>
@@ -275,7 +288,7 @@
                 <button onclick="loadLeaderboard('all')" id="tab-all" class="tab-btn">ALL-TIME</button>
             </div>
 
-            <div id="leaderboard-content">
+            <div id="leaderboard-content" style="max-height: 400px; overflow-y: auto;">
                 <table class="leaderboard-table">
                     <thead>
                         <tr>
@@ -288,6 +301,11 @@
                     </tbody>
                 </table>
                 <div id="leaderboard-loader" style="display:none;">LOADING...</div>
+            </div>
+
+            <div id="leaderboard-actions" style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+                <button id="btn-view-all" class="tab-btn" style="border: 1px solid var(--gold); padding: 5px 15px;"
+                    onclick="loadLeaderboard(currentLeaderboardTab, 100)">VIEW FULL LIST</button>
             </div>
 
             <div id="global-rank-footer"

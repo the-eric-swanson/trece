@@ -4,7 +4,8 @@ let wins = 0, losses = 0, gameCounter = 1;
 let activeSlot, discardSlot, successSlot, deckSlot;
 let scoreVal, winsVal, lossVal, deckCountVal, gameVal;
 let endModal, endTitle, endMessage, endComment, modalDealBtn, boardDealBtn;
-let rulesModal, optionsModal, leaderboardModal, themeIcon;
+let rulesModal, optionsModal, settingsModal, leaderboardModal, themeIcon;
+let currentLeaderboardTab = 'all';
 let lossTimer = null; // Tracks the pending "Game Over"
 let winTimer = null; // New variable to protect the victory trigger
 let deck = [], selectedCard = null, sessionScore = 0, roundEnded = false, isLocked = false;
@@ -99,6 +100,9 @@ function initGame() {
     }
     if (lossTimer) { clearTimeout(lossTimer); lossTimer = null; }
     if (isLocked) return;
+
+    toggleDiscardReviewUI(false); // Hide the browser
+
     if (roundEnded) { gameCounter++; gameVal.innerText = gameCounter; }
     roundEnded = false; selectedCard = null;
     endModal.style.display = 'none';
@@ -363,12 +367,13 @@ function check() {
             return;
         }
 
-        console.log("Initiating Win Modal in 500ms...");
+        console.log("Initiating Win Modal...");
+        const delay = CONFIG.DISABLE_ANIMATIONS ? 50 : 500;
         winTimer = setTimeout(() => {
             console.log("Executing end(true) now.");
             end(true);
             winTimer = null;
-        }, 500);
+        }, delay);
         return;
     }
 
@@ -400,13 +405,14 @@ function check() {
     // 3. THE LOSS CHECK
     if (!moves && deck.length === 0) {
         console.log("LOSS DETECTED: No moves and deck is empty.");
+        const delay = CONFIG.DISABLE_ANIMATIONS ? 100 : 1600;
         lossTimer = setTimeout(() => {
             if (!roundEnded) {
                 console.log("Executing end(false) now.");
                 end(false);
             }
             lossTimer = null;
-        }, 1600);
+        }, delay);
     }
     console.log("------------------------");
 }
@@ -472,35 +478,41 @@ function end(isWin) {
 
     if (isWin) {
         wins++;
-        if (isP) {
-            triggerFireworks(1000);
-            triggerPerfectAnimation();
-        } else if (isC) {
-            triggerSweepAnimation();
-        } else if (score >= 20) {
-            triggerWinAnimation(); // The card waterfall
-        } else if (score >= 10) {
-            triggerVortex(); // The Vortex
-        } else {
-            const fireworkCount = Math.max(deck.length * 100, 20);
-            triggerFireworks(fireworkCount);
+        if (!CONFIG.DISABLE_ANIMATIONS) {
+            if (isP) {
+                triggerFireworks(1000);
+                triggerPerfectAnimation();
+            } else if (isC) {
+                triggerSweepAnimation();
+            } else if (score >= 20) {
+                triggerWinAnimation(); // The card waterfall
+            } else if (score >= 10) {
+                triggerVortex(); // The Vortex
+            } else {
+                const fireworkCount = Math.max(deck.length * 100, 20);
+                triggerFireworks(fireworkCount);
+            }
         }
     }
     else {
         losses++;
-        if (score > -2) {
-            document.body.classList.add('shake-it');
-            setTimeout(() => document.body.classList.remove('shake-it'), 1550);
+        if (!CONFIG.DISABLE_ANIMATIONS) {
+            if (score > -2) {
+                document.body.classList.add('shake-it');
+                setTimeout(() => document.body.classList.remove('shake-it'), 1550);
+            }
+            else if (score > -10) {
+                const cardsLeft = Math.abs(score);
+                triggerLossAnimation(cardsLeft * 3);
+            }
+            else {
+                triggerLossAnimation(100);
+                triggerLightning();
+                setTimeout(triggerLightning, 1200);
+            }
         }
-        else if (score > -10) {
-            const cardsLeft = Math.abs(score);
-            triggerLossAnimation(cardsLeft * 3);
-        }
-        else {
-            triggerLossAnimation(100);
-            triggerLightning();
-            setTimeout(triggerLightning, 1200);
-        }
+
+        if (deckSlot) deckSlot.classList.add('can-review');
 
         reposition(true);
         document.querySelectorAll('.facedown').forEach((c, idx) => {
@@ -579,15 +591,26 @@ function end(isWin) {
         }, 1000);
     }
 
-    //Check leaderboard for first win of session
-    if (isWin && !CONFIG.HAS_PROMPTED) {
-        if (CONFIG.GAME_MODE === 'rated') {
-            checkLeaderboard(sessionScore);
-            return; // <--- MUST return here so checkLeaderboard can manage the modal
+    // --- SESSION ANALYTICS ---
+    trackSessionAnalytics(); // Increments game count for both rated/casual
+
+    // Show Discard Review Browser if loss
+    if (!isWin) {
+        toggleDiscardReviewUI(true);
+    }
+
+    //Check leaderboard for first win or first 0+ score of session
+    if (!CONFIG.HAS_PROMPTED && CONFIG.GAME_MODE === 'rated' && sessionScore > 0) {
+        if (CONFIG.PLAYER_INITIALS === "") {
+            // First time in session they have a positive score: ASK FOR INITIALS
+            showInitialsEntry(0, ""); // 0 indicates general prompt
+        } else {
+            // Silent update
+            submitScoreSilently();
         }
     }
 
-    if (isWin && CONFIG.HAS_PROMPTED && CONFIG.GAME_MODE === 'rated') {
+    if (CONFIG.HAS_PROMPTED && CONFIG.GAME_MODE === 'rated') {
         // ONLY trigger the update/leaderboard if they set a new personal peak
         if (sessionScore > CONFIG.PEAK_SCORE) {
 
@@ -967,6 +990,73 @@ function toggleOptions() {
     toggleDisplay(optionsModal);
 }
 
+function openSettings() {
+    refreshSettingsUI();
+    toggleDisplay(settingsModal, true);
+}
+
+function refreshSettingsUI() {
+    const status = document.getElementById('anim-status');
+    if (status) status.innerText = CONFIG.DISABLE_ANIMATIONS ? 'OFF' : 'ON';
+
+    const themeIconSettings = document.getElementById('theme-icon-settings');
+    if (themeIconSettings) {
+        const isMidnight = document.body.classList.contains('midnight-mode');
+        themeIconSettings.innerText = isMidnight ? "☀️" : "🌙";
+    }
+
+    // Update handedness buttons state
+    const savedHand = localStorage.getItem('treceHandedness') || 'left';
+    setHandedness(savedHand);
+}
+
+function toggleAnimations() {
+    CONFIG.DISABLE_ANIMATIONS = !CONFIG.DISABLE_ANIMATIONS;
+    localStorage.setItem('treceDisableAnimations', CONFIG.DISABLE_ANIMATIONS);
+    refreshSettingsUI();
+}
+
+async function trackSessionAnalytics() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('trece_analytics')
+            .select('game_count')
+            .eq('session_id', CONFIG.SESSION_ID)
+            .maybeSingle(); // Prevents 406 when no row is found
+
+        let newCount = 1;
+        if (data) {
+            newCount = data.game_count + 1;
+        }
+
+        await supabaseClient
+            .from('trece_analytics')
+            .upsert({
+                session_id: CONFIG.SESSION_ID,
+                game_count: newCount,
+                rated: CONFIG.GAME_MODE === 'rated'
+            }, { onConflict: 'session_id' });
+
+        CONFIG.ANALYTICS_TRACKED = true;
+    } catch (err) {
+        console.error("Analytics failed:", err);
+    }
+}
+
+async function submitScoreSilently() {
+    if (sessionScore <= CONFIG.PEAK_SCORE) return;
+
+    const { error } = await supabaseClient
+        .from('leaderboard')
+        .upsert({
+            session_id: CONFIG.SESSION_ID,
+            initials: CONFIG.PLAYER_INITIALS,
+            score: sessionScore
+        }, { onConflict: 'session_id' });
+
+    if (!error) CONFIG.PEAK_SCORE = sessionScore;
+}
+
 function getThemeColors() {
     const style = getComputedStyle(document.documentElement);
     return {
@@ -1000,24 +1090,24 @@ function setHandedness(hand) {
 }
 
 // Helper for your specific wording requirements
-function getRankWord(rank) {
-    const words = ["highest", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth"];
-    return words[rank - 1] || "top";
-}
-
 function showInitialsEntry(rank, timeframe) {
     if (CONFIG.HAS_PROMPTED) return;
 
-    const rankWord = getRankWord(rank);
     const entryArea = document.getElementById('high-score-entry');
     const messageDisplay = entryArea.querySelector('p');
 
-    // Updated line to include the score value
-    messageDisplay.innerHTML = `You got the ${rank !== 1 ? rankWord + ' ' : ''}highest score ${timeframe}!<br/>` +
-        `<span style="font-size: 1.4rem; color: #fff;">${sessionScore} POINTS</span>`;
+    if (rank > 0) {
+        const rankWord = getRankWord(rank);
+        messageDisplay.innerHTML = `You got the ${rank !== 1 ? rankWord + ' ' : ''}highest score ${timeframe}!<br/>` +
+            `<span style="font-size: 1.4rem; color: #fff;">${sessionScore} POINTS</span>`;
+    } else {
+        messageDisplay.innerHTML = `Join the world stage!<br/>` +
+            `<span style="font-size: 1.4rem; color: #fff;">${sessionScore} POINTS</span>`;
+    }
 
     entryArea.style.display = 'block';
-    hasPromptedThisSession = true;
+    // Remove the global hack that might exist
+    // hasPromptedThisSession = true; 
 }
 
 async function submitScore() {
@@ -1054,33 +1144,36 @@ function openLeaderboard() {
     toggleDisplay(optionsModal, false);
     toggleDisplay(leaderboardModal, true);
     loadLeaderboard('all'); // Default to All-Time
-    fetchGlobalRank(); //
 }
 
-async function loadLeaderboard(timeframe) {
+async function loadLeaderboard(timeframe, limit = 10) {
+    currentLeaderboardTab = timeframe;
     // 1. UI Feedback: Update Active Tab
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`tab-${timeframe}`).classList.add('active');
 
-    const body = document.getElementById('leaderboard-body');
     const loader = document.getElementById('leaderboard-loader');
+    const body = document.getElementById('leaderboard-body');
+    const viewAllBtn = document.getElementById('btn-view-all');
 
     body.innerHTML = '';
     loader.style.display = 'block';
+    viewAllBtn.style.display = limit === 10 ? 'block' : 'none';
 
     // 2. Build Query
     let query = supabaseClient
         .from('leaderboard')
-        .select('initials, score, created_at, session_id') // <--- Add session_id here
+        .select('initials, score, created_at, session_id')
         .order('score', { ascending: false })
-        .limit(10);
+        .limit(limit);
 
     // Apply Time Filters
+    let timeframeDisplay = "ALL-TIME";
     if (timeframe !== 'all') {
         const date = new Date();
-        if (timeframe === 'week') date.setDate(date.getDate() - 7);
-        if (timeframe === 'month') date.setMonth(date.getMonth() - 1);
-        if (timeframe === 'year') date.setFullYear(date.getFullYear() - 1);
+        if (timeframe === 'week') { date.setDate(date.getDate() - 7); timeframeDisplay = "WEEKLY"; }
+        if (timeframe === 'month') { date.setMonth(date.getMonth() - 1); timeframeDisplay = "MONTHLY"; }
+        if (timeframe === 'year') { date.setFullYear(date.getFullYear() - 1); timeframeDisplay = "YEARLY"; }
         query = query.gte('created_at', date.toISOString());
     }
 
@@ -1099,14 +1192,12 @@ async function loadLeaderboard(timeframe) {
     }
 
     data.forEach((entry, index) => {
-        // Check if this row belongs to the current user's session
         const isCurrentUser = entry.session_id === CONFIG.SESSION_ID;
-
-        // Add a special 'current-user' class if it matches
+        const rowId = isCurrentUser ? 'id="current-user-rank-row"' : '';
         const rowClass = isCurrentUser ? 'class="current-user-row"' : '';
 
         const row = `
-                <tr ${rowClass}>
+                <tr ${rowId} ${rowClass}>
                     <td>${index + 1}</td>
                     <td style="${isCurrentUser ? 'color: #fff; text-shadow: 0 0 10px var(--gold);' : ''}">${entry.initials}</td>
                     <td>${entry.score}</td>
@@ -1114,6 +1205,16 @@ async function loadLeaderboard(timeframe) {
             `;
         body.innerHTML += row;
     });
+
+    // Handle smooth scroll if viewing all
+    if (limit > 10) {
+        setTimeout(() => {
+            const row = document.getElementById('current-user-rank-row');
+            if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+    }
+
+    fetchGlobalRank(timeframe, timeframeDisplay);
 }
 
 async function checkLeaderboard(playerScore) {
@@ -1195,21 +1296,31 @@ function switchRulesTab(tabName) {
     document.getElementById(`rules-tab-${tabName}`).classList.add('active');
 }
 
-async function fetchGlobalRank() {
+async function fetchGlobalRank(timeframe, timeframeDisplay) {
     // Use the Peak score for the rank calculation
     if (CONFIG.PEAK_SCORE <= 0) return;
 
-    const { count, error } = await supabaseClient
+    let query = supabaseClient
         .from('leaderboard')
         .select('*', { count: 'exact', head: true })
-        .gt('score', CONFIG.PEAK_SCORE); // Compare against Peak
+        .gt('score', CONFIG.PEAK_SCORE);
+
+    if (timeframe !== 'all') {
+        const date = new Date();
+        if (timeframe === 'week') date.setDate(date.getDate() - 7);
+        if (timeframe === 'month') date.setMonth(date.getMonth() - 1);
+        if (timeframe === 'year') date.setFullYear(date.getFullYear() - 1);
+        query = query.gte('created_at', date.toISOString());
+    }
+
+    const { count, error } = await query;
 
     if (!error) {
         const footer = document.getElementById('global-rank-footer');
         const rankVal = document.getElementById('user-rank-val');
 
         footer.style.display = 'block';
-        rankVal.innerText = `#${count + 1}`;
+        footer.innerHTML = `YOUR ${timeframeDisplay} RANK: <span id="user-rank-val">#${count + 1}</span>`;
     }
 }
 
@@ -1228,6 +1339,8 @@ window.onload = () => {
     deckCountVal = document.getElementById('deck-count');
     gameVal = document.getElementById('game-val');
 
+    // Disabled the direct click listener on deckSlot in favor of the new navigation UI
+
     // Cache the Modal Elements
     endModal = document.getElementById('end-modal');
     endTitle = document.getElementById('end-title');
@@ -1237,8 +1350,9 @@ window.onload = () => {
     boardDealBtn = document.getElementById('board-deal-btn');
     rulesModal = document.getElementById('rules-modal');
     optionsModal = document.getElementById('options-modal');
+    settingsModal = document.getElementById('settings-modal');
     leaderboardModal = document.getElementById('leaderboard-modal');
-    themeIcon = document.getElementById('theme-icon');
+    themeIcon = document.getElementById('theme-icon-settings'); // Point to the one in settings
 
     const submitBtn = document.getElementById('submit-score-btn');
     if (submitBtn) submitBtn.onclick = submitScore;
@@ -1534,4 +1648,66 @@ function resetProgress() {
         localStorage.clear();
         window.location.reload();
     }
+}
+function toggleDiscardReviewUI(show) {
+    if (!deckSlot) return;
+
+    let container = document.getElementById('review-nav-container');
+    if (show) {
+        deckSlot.classList.add('can-review');
+        deckSlot.onclick = null; // Disable drawCard during review
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'review-nav-container';
+            container.className = 'review-nav-container';
+
+            const prevBtn = document.createElement('div');
+            prevBtn.className = 'review-nav-btn';
+            prevBtn.innerHTML = '◀️';
+            prevBtn.onclick = (e) => { e.stopPropagation(); reviewPrev(); };
+
+            const nextBtn = document.createElement('div');
+            nextBtn.className = 'review-nav-btn';
+            nextBtn.innerHTML = '▶️';
+            nextBtn.onclick = (e) => { e.stopPropagation(); reviewNext(); };
+
+            container.appendChild(prevBtn);
+            container.appendChild(nextBtn);
+            deckSlot.appendChild(container);
+        }
+        container.style.display = 'flex';
+    } else {
+        deckSlot.classList.remove('can-review');
+        deckSlot.onclick = drawCard; // Restore drawCard
+        if (container) container.style.display = 'none';
+    }
+}
+
+function reviewPrev() {
+    const cards = Array.from(discardSlot.children);
+    if (cards.length === 0) return;
+
+    const card = cards[cards.length - 1];
+    deckSlot.appendChild(card); // Moves to deck slot
+
+    // Ensure it's visible and doesn't trigger layout clicks
+    card.classList.add('in-review');
+    card.style.position = 'absolute';
+    card.style.top = '0';
+    card.style.left = '0';
+    card.style.zIndex = '100';
+    card.style.pointerEvents = 'none';
+}
+
+function reviewNext() {
+    const cards = Array.from(deckSlot.children).filter(c => c.classList.contains('card'));
+    if (cards.length === 0) return;
+
+    // Move the TOP card (last added) back to discard
+    const card = cards[cards.length - 1];
+    discardSlot.appendChild(card);
+
+    // Reset styles to match discard pile
+    card.classList.remove('in-review');
+    card.style.zIndex = '';
 }
