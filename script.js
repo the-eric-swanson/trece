@@ -553,9 +553,11 @@ function end(isWin) {
     } else if (gameCounter === 20) {
         cooldown = 15;
         breakMessage = "<span class='break-alert' style='color: #ffaa00;'>20 Games: Take a breather</span>";
+        coffeeButtonHTML = supportButton; // Add button for 20 games
     } else if (gameCounter === 10) {
         cooldown = 5;
         breakMessage = "<span class='break-alert' style='color: var(--gold);'>10 Games: Quick stretch</span>";
+        coffeeButtonHTML = supportButton; // Add button for 10 games
     } else if (gameCounter === 5) {
         breakMessage = "<span class='break-alert' style='color: var(--gold); opacity: 0.8;'>5 games: Ready for a break?</span>";
     }
